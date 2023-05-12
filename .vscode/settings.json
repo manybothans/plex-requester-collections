@@ -1,10 +1,17 @@
 {
-    "search.exclude": {
-        "**/node_modules": false
-    },
-    "search.useIgnoreFiles": false,
-    "editor.formatOnSave": true,
-    "editor.formatOnPaste": true,
-    "editor.tabSize": 4,
-    "editor.insertSpaces": false
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"search.exclude": {
+		"**/node_modules": false
+	},
+	"search.useIgnoreFiles": false,
+	"editor.formatOnSave": true,
+	"editor.formatOnPaste": true,
+	"editor.tabSize": 4,
+	"editor.insertSpaces": false,
+	"javascript.preferences.quoteStyle": "double",
+	"typescript.preferences.quoteStyle": "double",
+	"tsimporter.doubleQuotes": true,
+	"prettier.singleQuote": false,
+	"prettier.tabWidth": 4,
+	"prettier.useTabs": true
 }
