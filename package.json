@@ -2,16 +2,17 @@
   "name": "y",
   "version": "0.0.1",
   "description": "Node app to automatically create Plex Collections for content requested by users in Overseerr.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "start": "tsc && node dist/index.js",
+    "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "plex",
     "overseerr",
     "homelab",
-    "self",
-    "host"
+    "selfhost"
   ],
   "author": "Jess Latimer",
   "license": "MIT",
