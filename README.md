@@ -1,6 +1,12 @@
 # Plex Requester Collections
 
-This app automatically creates Collections in Plex Media Server for the content that each user requests in the media request management system Overseerr.
+This app automatically creates Collections in Plex Media Server for the content that each user requests in the media request management system Overseerr. It will add a label to all TV Shows and Movies in Plex that a user has requested in Overseerr, using the label format `requester:plex_username`. It will also create Smart Collections for each user containing their requested items. The collections will have labels in the format `owned_by:plex_username`, which you can use to create sharing restrictions if desired, for example for personalized home screens.
+
+#### Limitations
+
+I'm pretty sure Overseerr needs to be using Plex for user authentication, but I haven't tested other setups.
+
+Source code provided as is, use at your own risk. Issues and Pull Requests welcomed, but I may not get to them right away.
 
 ## Installation
 
@@ -16,8 +22,10 @@ Add a `.env` file to your root project directory that looks like this:
 
 ```bash
 NODE_ENV=development
+OVERSEERR_URL=http://overseerr-ip-address:5055/api/v1
 OVERSEERR_API_KEY=********************
-OVERSEERR_URL=http://overseerr-example.com:5055/api/v1
+PLEX_URL=http://plex-server-ip-address:32400
+PLEX_TOKEN=********************
 ```
 
 Build and run with:
@@ -33,7 +41,6 @@ Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
-
 -->
 
 ## License

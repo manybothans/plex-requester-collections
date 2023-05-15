@@ -13,5 +13,6 @@
 	"tsimporter.doubleQuotes": true,
 	"prettier.singleQuote": false,
 	"prettier.tabWidth": 4,
-	"prettier.useTabs": true
+	"prettier.useTabs": true,
+	"editor.wordWrapColumn": 120
 }
