@@ -177,6 +177,31 @@ X-Plex-Drm=fairplay&
 X-Plex-Language=en
 */
 
+/*
+get gollections
+/library/sections/1/collections
+
+includeCollections=1&
+includeExternalMedia=1&
+X-Plex-Product=Plex%20Web&
+X-Plex-Version=4.100.1&
+X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
+X-Plex-Platform=Safari&
+X-Plex-Platform-Version=16.4&
+X-Plex-Features=external-media%2Cindirect-media%2Chub-style-list&
+X-Plex-Model=bundled&
+X-Plex-Device=OSX&
+X-Plex-Device-Name=Safari&
+X-Plex-Device-Screen-Resolution=1706x980%2C1920x1080&
+X-Plex-Container-Start=50&
+X-Plex-Container-Size=108&
+X-Plex-Token=UbrsJBKcpBEbwXCjG4Fm&
+X-Plex-Provider-Version=6.3&
+X-Plex-Text-Format=plain&
+X-Plex-Drm=fairplay&
+X-Plex-Language=en 
+ */
+
 // I found these using browser dev console, haven't found the others.
 const PlexTypes = {
 	MOVIE: 1,
@@ -187,7 +212,8 @@ const PlexTypes = {
 const PlexAPI = {
 	// Unique ID for the Plex server intance, needed for creating collections
 	MachineId: "",
-	// This API command is used to get the capabilities of the Plex Media server. The capabilities returned include such items as the settings of the Plex server, the operating system, and the version of Plex that is installed.
+	// This API command is used to get the capabilities of the Plex Media server. The capabilities returned include such items as the settings of the
+	// Plex server, the operating system, and the version of Plex that is installed.
 	getCapabilities: async function () {
 		const data = await this.callApi({ url: "/" });
 		this.debug(data);
@@ -217,6 +243,18 @@ const PlexAPI = {
 				: [];
 		this.debug(sections);
 		return sections;
+	},
+	// The API command described here can return the information for each account setup on the Plex server.
+	getCollections: async function (sectionId: number) {
+		const data = await this.callApi({
+			url: `/library/sections/${sectionId}/collections`
+		});
+		const collections =
+			data && data.MediaContainer && data.MediaContainer.Metadata
+				? data.MediaContainer.Metadata
+				: [];
+		this.debug(collections);
+		return collections;
 	},
 	// The API command described here can return the information for each account setup on the Plex server.
 	getAccounts: async function () {
