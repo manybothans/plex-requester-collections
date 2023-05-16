@@ -12,7 +12,7 @@ This app automatically creates Collections in Plex Media Server for the content 
 
 -   I'm pretty sure Overseerr needs to be using Plex for user authentication, but I haven't tested other setups.
 -   It might mess up if you've created your own collections named something like "Movies Requested By plex_username" or "TV Shows Requested By plex_username".
--   Source code provided as is, use at your own risk. Issues and Pull Requests welcomed, but I may not get to them right away.
+-   Source code provided as is, use at your own risk.
 
 ## Installation
 
@@ -40,12 +40,12 @@ Build and run with:
 npm start
 ```
 
-<!--
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
 
+<!--
 Please make sure to update tests as appropriate.
 -->
 
