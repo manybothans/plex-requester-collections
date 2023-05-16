@@ -1,5 +1,3 @@
-### ⚠️ UNDER DEVELOPMENT, INCOMPLETE ⚠️
-
 # Plex Requester Collections
 
 This app automatically creates Collections in Plex Media Server for the content that each user requests in the media request management system Overseerr. It will add a label to all TV Shows and Movies in Plex that a user has requested in Overseerr, using the label format `requester:plex_username`. It will also create Smart Collections for each user containing their requested items. The collections will have labels in the format `owner:plex_username`, which you can use to create sharing restrictions if desired, for example for personalized home screens.

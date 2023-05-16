@@ -163,7 +163,6 @@ type PlexCollectionOptions = {
 	sectionId: number;
 	title: string;
 	titleSort?: string;
-	mediaIds?: Array<number>;
 	itemType: number;
 	sort?: string;
 	query: string;
@@ -258,7 +257,17 @@ const PlexAPI = {
 		// TO DO This one was kind of a finicky query. Just copying their exact string for now, will come back and simplify.
 		// Looks like you can't set titleSort in this command
 		const data = await this.callApi({
-			url: `/library/collections?type=${options.itemType}&title=${options.title}&smart=1&uri=server%3A%2F%2F${machineId}%2Fcom.plexapp.plugins.library%2Flibrary%2Fsections%2F${options.sectionId}%2Fall%3Ftype%3D${options.itemType}%26sort%3D${options.sort}%26${options.query}&sectionId=${options.sectionId}`,
+			url: `/library/collections?type=${
+				options.itemType
+			}&title=${encodeURIComponent(
+				options.title
+			)}&smart=1&uri=server%3A%2F%2F${machineId}%2Fcom.plexapp.plugins.library%2Flibrary%2Fsections%2F${
+				options.sectionId
+			}%2Fall%3Ftype%3D${options.itemType}%26sort%3D${
+				options.sort
+			}%26${encodeURIComponent(options.query)}&sectionId=${
+				options.sectionId
+			}`,
 			method: "post"
 		});
 
@@ -268,6 +277,9 @@ const PlexAPI = {
 			const collectionKey = data?.MediaContainer?.Metadata?.length
 				? data.MediaContainer.Metadata[0].ratingKey
 				: undefined;
+
+			// If key can't be found, get out of here cause next call might make wrong changes.
+			if (!collectionKey) return undefined;
 
 			// Update the collection's titleSort field.
 			const result = await this.updateItemDetails(
@@ -282,8 +294,8 @@ const PlexAPI = {
 			this.debug(result);
 		}
 
-		this.debug(data?.MediaContainer?.Metadata);
-		return data?.MediaContainer?.Metadata;
+		this.debug(data?.MediaContainer?.Metadata[0]);
+		return data?.MediaContainer?.Metadata[0];
 	},
 	// The API command described here can return the information for each account setup on the Plex server.
 	getAccounts: async function () {
@@ -336,28 +348,17 @@ const PlexAPI = {
 		this.debug(labelKey);
 		return labelKey;
 	},
-	// Alias helper funtion to simplify adding labels to movies.
-	addLabelToMovie: async function (
+	// Alias helper funtion to simplify adding labels to plex items (Movies, Shows, Collections, etc.).
+	addLabelToItem: async function (
 		sectionId: number,
-		movieId: number,
+		itemType: number,
+		itemId: number,
 		label: string
 	) {
-		return this.updateItemDetails(sectionId, movieId, {
-			"label[0].tag.tag": encodeURIComponent(label),
+		return this.updateItemDetails(sectionId, itemId, {
+			"label[0].tag.tag": label,
 			"label.locked": 1,
-			type: PlexTypes.MOVIE
-		});
-	},
-	// Alias helper funtion to simplify adding labels to collecitons.
-	addLabelToCollection: async function (
-		sectionId: number,
-		collectionId: number,
-		label: string
-	) {
-		return this.updateItemDetails(sectionId, collectionId, {
-			"label[0].tag.tag": encodeURIComponent(label),
-			"label.locked": 1,
-			type: PlexTypes.COLLECTION
+			type: itemType
 		});
 	},
 	// Returns an array of all the top-level media items (Movies or TV Shows) in a given Section AKA Library.

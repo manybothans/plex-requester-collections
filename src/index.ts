@@ -22,21 +22,81 @@ import _ from "lodash";
 			// ID of current library section.
 			const sectionId = parseInt(plexSections[i]?.key);
 
-			// Get all the media items, existing collections, and existing labels for this library section.
+			// Get all the media items and existing collections for this library section.
 			const mediaItems = await PlexAPI.getAllItems(sectionId);
-			const collections = await PlexAPI.getCollections(sectionId);
-			const labels = await PlexAPI.getLabels(sectionId);
+			let collections = await PlexAPI.getCollections(sectionId);
 
 			// Cycle through each media item in the library section, tag it with the requester.
 			for (let j = 0; j < mediaItems.length; j++) {
 				const mediaItem = mediaItems[j];
-				const request = getRequestForPlexMediaId(
+
+				// Does a requester entry exist for this media item?
+				const request = _.find(
 					requests,
-					parseInt(mediaItem?.ratingKey)
+					(item) => item?.media?.ratingKey === mediaItem?.ratingKey
 				);
+
+				// Bingo, this media item has a requester... Do the stuff.
 				if (mediaItem && request) {
+					// Init some values we're going to need.
+					const mediaId = parseInt(mediaItem.ratingKey);
+					const plexUsername = request?.requestedBy?.plexUsername;
+
+					// Tag the media item.
+					const mediaLabelValue = "requester:" + plexUsername;
+					const result = await PlexAPI.addLabelToItem(
+						sectionId,
+						PlexAPI.getPlexTypeCode(sectionType),
+						mediaId,
+						mediaLabelValue
+					);
+
+					// This is what the smart collection should be called.
+					const collectionTitle =
+						sectionType == "movie"
+							? "Movies Requested by " + plexUsername
+							: "TV Shows Requested by " + plexUsername;
+
+					// Does the smart collection already exist?
+					const collection = _.find(
+						collections,
+						(item) => item?.title === collectionTitle
+					);
+					// If collection exists with this title, assume it's set up correctly and we don't need to do anything else.
+					// If collection does not exist with this title, create it and tag is with owner label.
+					if (!collection) {
+						// Get the numberic ID of the label we're using right now.
+						const mediaLabelKey = await PlexAPI.getKeyForLabel(
+							sectionId,
+							mediaLabelValue
+						);
+
+						// Create the new smart collection
+						const createColResult =
+							await PlexAPI.createSmartCollection({
+								sectionId: sectionId,
+								title: collectionTitle,
+								titleSort: "zzz_" + collectionTitle, // TO DO Move prefix to env option.
+								itemType: PlexAPI.getPlexTypeCode(sectionType),
+								sort: "addedAt%3Adesc", //date added descending
+								query: "label=" + mediaLabelKey
+							});
+						// Only continue if creating the collection seems to have worked.
+						if (createColResult) {
+							const labelColResult = await PlexAPI.addLabelToItem(
+								sectionId,
+								PlexAPI.getPlexTypeCode(createColResult.type),
+								parseInt(createColResult.ratingKey),
+								"owner:" + plexUsername
+							);
+						}
+
+						// Update list of collections we're working with now that we've added one.
+						collections = await PlexAPI.getCollections(sectionId);
+					}
+
 					console.log(
-						`${mediaItem.title} requested by ${request?.requestedBy?.displayName}`
+						`${mediaItem.title} requested by ${plexUsername}`
 					);
 				}
 			}
@@ -45,11 +105,3 @@ import _ from "lodash";
 		}
 	}
 })();
-
-const getRequestForPlexMediaId = function (requests, plexId) {
-	const result = _.find(
-		requests,
-		(element) => parseInt(element?.media?.ratingKey) === plexId
-	);
-	return result;
-};
