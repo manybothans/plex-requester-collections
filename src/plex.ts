@@ -8,38 +8,18 @@ dotenv.config();
 // Docs are incomplete, but good starting point. I had to do some reverse engineering.
 
 /*
-collection add tag
-type=18&
-id=37973&
-includeExternalMedia=1&
-titleSort.locked=1&
-label.locked=1&
-label%5B0%5D.tag.tag=hi&
-X-Plex-Product=Plex%20Web&
-X-Plex-Version=4.100.1&
-X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
-X-Plex-Platform=Safari&
-X-Plex-Platform-Version=16.4&
-X-Plex-Features=external-media%2Cindirect-media%2Chub-style-list&
-X-Plex-Model=bundled&
-X-Plex-Device=OSX&
-X-Plex-Device-Name=Safari&
-X-Plex-Device-Screen-Resolution=1706x2032%2C5120x2160&
-X-Plex-Token=UbrsJBKcpBEbwXCjG4Fm&
-X-Plex-Language=en
-*/
-
-/*
 create dumb collection
 /library/collections
 type=1&
 title=Test3&
 smart=0&
+sectionId=1&
 uri=server%3A%2F%2Fbaaf4cd09f73f07ddc676de067b123704c60cb1f%2Fcom.plexapp.plugins.library%2Flibrary%2Fmetadata%2F32730&
+    server%3A%2F%2Fbaaf4cd09f73f07ddc676de067b123704c60cb1f%2Fcom.plexapp.plugins.library%2Flibrary%2Fmetadata%2F32730
 
 uri=server://baaf4cd09f73f07ddc676de067b123704c60cb1f/com.plexapp.plugins.library/library/metadata/32730&
 
-sectionId=1&
+
 X-Plex-Product=Plex%20Web&
 X-Plex-Version=4.100.1&
 X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
@@ -64,11 +44,11 @@ create dumb colleciton
 type=1&
 title=Test5&
 smart=0&
+sectionId=1&
 uri=server%3A%2F%2Fbaaf4cd09f73f07ddc676de067b123704c60cb1f%2Fcom.plexapp.plugins.library%2Flibrary%2Fmetadata%2F32730%2C32694%2C30503&
 
 uri=server://baaf4cd09f73f07ddc676de067b123704c60cb1f/com.plexapp.plugins.library/library/metadata/32730,32694,30503&
 
-sectionId=1&
 X-Plex-Product=Plex%20Web&
 X-Plex-Version=4.100.1&
 X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
@@ -95,11 +75,11 @@ create smart collection
 type=1&
 title=Test4&
 smart=1&
+sectionId=1&
 uri=server%3A%2F%2Fbaaf4cd09f73f07ddc676de067b123704c60cb1f%2Fcom.plexapp.plugins.library%2Flibrary%2Fsections%2F1%2Fall%3Ftype%3D1%26sort%3DtitleSort%26label%3D139932&
 
 uri=server://baaf4cd09f73f07ddc676de067b123704c60cb1f/com.plexapp.plugins.library/library/sections/1/all?type=1&sort=titleSort&label=139932&
 
-sectionId=1&
 X-Plex-Product=Plex%20Web&
 X-Plex-Version=4.100.1&
 X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
@@ -124,6 +104,7 @@ create smart collection
 type=2&
 title=Test6&
 smart=1&
+sectionId=2&
 uri=server%3A%2F%2Fbaaf4cd09f73f07ddc676de067b123704c60cb1f%2Fcom.plexapp.plugins.library%2Flibrary%2Fsections%2F2%2Fall%3Ftype%3D2%26sort%3DaddedAt%253Adesc%26push%3D1%26show.year%3D2023%26and%3D1%26show.unwatchedLeaves%3D1%26pop%3D1%26and%3D1%26show.label%3D137662&
 
 uri=server://baaf4cd09f73f07ddc676de067b123704c60cb1f/com.plexapp.plugins.library/library/sections/2/all?
@@ -137,7 +118,6 @@ pop=1&
 and=1&
 show.label=137662&
 
-sectionId=2&
 X-Plex-Product=Plex%20Web&
 X-Plex-Version=4.100.1&
 X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
@@ -157,50 +137,20 @@ X-Plex-Language=en
 */
 
 /*
-get labels
-/library/sections/1/label
-
-X-Plex-Product=Plex%20Web&
-X-Plex-Version=4.100.1&
-X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
-X-Plex-Platform=Safari&
-X-Plex-Platform-Version=16.4&
-X-Plex-Features=external-media%2Cindirect-media%2Chub-style-list&
-X-Plex-Model=bundled&
-X-Plex-Device=OSX&
-X-Plex-Device-Name=Safari&
-X-Plex-Device-Screen-Resolution=1706x877%2C5120x2160&
-X-Plex-Token=UbrsJBKcpBEbwXCjG4Fm&
-X-Plex-Provider-Version=6.3&
-X-Plex-Text-Format=plain&
-X-Plex-Drm=fairplay&
-X-Plex-Language=en
+update collection
+/library/sections/1/all
+type=18&id=38010&includeExternalMedia=1&titleSort.value=%21000_Boop&titleSort.locked=1&
+X-Plex-Product=Plex%20Web&X-Plex-Version=4.100.1&X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&X-Plex-Platform=Safari&
+X-Plex-Platform-Version=16.4&X-Plex-Features=external-media%2Cindirect-media%2Chub-style-list&X-Plex-Model=bundled&
+X-Plex-Device=OSX&X-Plex-Device-Name=Safari&X-Plex-Device-Screen-Resolution=1706x1269%2C5120x2160&X-Plex-Token=UbrsJBKcpBEbwXCjG4Fm&X-Plex-Language=en
 */
 
 /*
-get gollections
-/library/sections/1/collections
-
-includeCollections=1&
-includeExternalMedia=1&
-X-Plex-Product=Plex%20Web&
-X-Plex-Version=4.100.1&
-X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&
-X-Plex-Platform=Safari&
-X-Plex-Platform-Version=16.4&
-X-Plex-Features=external-media%2Cindirect-media%2Chub-style-list&
-X-Plex-Model=bundled&
-X-Plex-Device=OSX&
-X-Plex-Device-Name=Safari&
-X-Plex-Device-Screen-Resolution=1706x980%2C1920x1080&
-X-Plex-Container-Start=50&
-X-Plex-Container-Size=108&
-X-Plex-Token=UbrsJBKcpBEbwXCjG4Fm&
-X-Plex-Provider-Version=6.3&
-X-Plex-Text-Format=plain&
-X-Plex-Drm=fairplay&
-X-Plex-Language=en 
- */
+delete colleciton
+/library/collections/38023
+DELETE
+X-Plex-Product=Plex%20Web&X-Plex-Version=4.100.1&X-Plex-Client-Identifier=49kxnd12vqluqvr6ih8ztbio&X-Plex-Platform=Safari&X-Plex-Platform-Version=16.4&X-Plex-Features=external-media%2Cindirect-media%2Chub-style-list&X-Plex-Model=bundled&X-Plex-Device=OSX&X-Plex-Device-Name=Safari&X-Plex-Device-Screen-Resolution=1706x2032%2C5120x2160&X-Plex-Token=UbrsJBKcpBEbwXCjG4Fm&X-Plex-Language=en&X-Plex-Drm=fairplay&X-Plex-Text-Format=plain&X-Plex-Provider-Version=5.1
+*/
 
 // I found these using browser dev console, haven't found the others.
 const PlexTypes = {
@@ -209,16 +159,40 @@ const PlexTypes = {
 	COLLECTION: 18
 };
 
+type PlexCollectionOptions = {
+	sectionId: number;
+	title: string;
+	titleSort?: string;
+	mediaIds?: Array<number>;
+	itemType: number;
+	sort?: string;
+	query: string;
+};
+
+/**
+ * This is the top-level PlexAPI singleton object.
+ */
 const PlexAPI = {
-	// Unique ID for the Plex server intance, needed for creating collections
+	/**
+	 * Unique ID for the Plex server intance, needed for creating collections.
+	 */
 	MachineId: "",
-	// This API command is used to get the capabilities of the Plex Media server. The capabilities returned include such items as the settings of the
-	// Plex server, the operating system, and the version of Plex that is installed.
+	/**
+	 * This API command is used to get the capabilities of the Plex Media server.
+	 * The capabilities returned include such items as the settings of the Plex server,
+	 * the operating system, and the version of Plex that is installed.
+	 */
 	getCapabilities: async function () {
 		const data = await this.callApi({ url: "/" });
 		this.debug(data);
 		return data;
 	},
+	/**
+	 * This method returns the Machine ID for the current Plex Media Server intances.
+	 * If we haven't gotten the ID yet, it makes an API call to get it before returning.
+	 *
+	 * @return {Promise<string>} Promise resolving to the string Machine ID.
+	 */
 	getMachineId: async function () {
 		if (!this.MachineId) {
 			const data = await this.getCapabilities();
@@ -234,6 +208,20 @@ const PlexAPI = {
 		this.debug(this.MachineId);
 		return this.MachineId;
 	},
+	/**
+	 * Plex goes between using the string codes and number codes, need to get one from the other
+	 */
+	getPlexTypeCode: function (typeString: string) {
+		switch (typeString) {
+			case "show":
+				return PlexTypes.SERIES;
+			case "movie":
+				return PlexTypes.MOVIE;
+			case "collection":
+				return PlexTypes.COLLECTION;
+		}
+		return PlexTypes.MOVIE;
+	},
 	// You can easily retrieve the information about all libraries AKA sections that are available on a Plex server using this API command.
 	getSections: async function () {
 		const data = await this.callApi({ url: "/library/sections" });
@@ -247,7 +235,11 @@ const PlexAPI = {
 	// The API command described here can return the information for each account setup on the Plex server.
 	getCollections: async function (sectionId: number) {
 		const data = await this.callApi({
-			url: `/library/sections/${sectionId}/collections`
+			url: `/library/sections/${sectionId}/collections`,
+			params: {
+				includeCollections: 1,
+				includeExternalMedia: 1
+			}
 		});
 		const collections =
 			data && data.MediaContainer && data.MediaContainer.Metadata
@@ -255,6 +247,43 @@ const PlexAPI = {
 				: [];
 		this.debug(collections);
 		return collections;
+	},
+	// Create a smart collection based on a query of metadata fields.
+	// Browser Inpector on Plex is your friend for building these queries. Advanced Filter >> Save As Collection
+	createSmartCollection: async function (options: PlexCollectionOptions) {
+		const machineId = await PlexAPI.getMachineId();
+		options.sort = options.sort ? options.sort : "titleSort";
+		// options.query = options.query ? options.query : "unwatched%3D1";// default to unwatched = true
+
+		// TO DO This one was kind of a finicky query. Just copying their exact string for now, will come back and simplify.
+		// Looks like you can't set titleSort in this command
+		const data = await this.callApi({
+			url: `/library/collections?type=${options.itemType}&title=${options.title}&smart=1&uri=server%3A%2F%2F${machineId}%2Fcom.plexapp.plugins.library%2Flibrary%2Fsections%2F${options.sectionId}%2Fall%3Ftype%3D${options.itemType}%26sort%3D${options.sort}%26${options.query}&sectionId=${options.sectionId}`,
+			method: "post"
+		});
+
+		// Need to do a second call to set titleSort, if we want to.
+		if (options.titleSort && options.titleSort != options.title) {
+			// Get the ID of the newly created collection from the response of previous request.
+			const collectionKey = data?.MediaContainer?.Metadata?.length
+				? data.MediaContainer.Metadata[0].ratingKey
+				: undefined;
+
+			// Update the collection's titleSort field.
+			const result = await this.updateItemDetails(
+				options.sectionId,
+				collectionKey,
+				{
+					type: PlexTypes.COLLECTION,
+					"titleSort.value": encodeURIComponent(options.titleSort),
+					"titleSort.locked": 1
+				}
+			);
+			this.debug(result);
+		}
+
+		this.debug(data?.MediaContainer?.Metadata);
+		return data?.MediaContainer?.Metadata;
 	},
 	// The API command described here can return the information for each account setup on the Plex server.
 	getAccounts: async function () {
@@ -292,7 +321,9 @@ const PlexAPI = {
 		this.debug(labels);
 		return labels;
 	},
-	// Get a list of all the labels for this library section, along with label key.
+	/**
+	 * Get a list of all the labels for this library section, along with label key.
+	 */
 	getKeyForLabel: async function (sectionId: number, label: string) {
 		const labels = await this.getLabels(sectionId);
 		let labelKey: number;
@@ -312,7 +343,7 @@ const PlexAPI = {
 		label: string
 	) {
 		return this.updateItemDetails(sectionId, movieId, {
-			"label[0].tag.tag": label,
+			"label[0].tag.tag": encodeURIComponent(label),
 			"label.locked": 1,
 			type: PlexTypes.MOVIE
 		});
@@ -324,7 +355,7 @@ const PlexAPI = {
 		label: string
 	) {
 		return this.updateItemDetails(sectionId, collectionId, {
-			"label[0].tag.tag": label,
+			"label[0].tag.tag": encodeURIComponent(label),
 			"label.locked": 1,
 			type: PlexTypes.COLLECTION
 		});

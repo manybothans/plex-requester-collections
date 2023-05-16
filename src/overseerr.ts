@@ -108,7 +108,7 @@ const OverseerrAPI = {
 	callApi: async function (requestObj: AxiosRequestConfig) {
 		try {
 			requestObj = requestObj || {};
-			requestObj.baseURL = process.env.OVERSEERR_URL;
+			requestObj.baseURL = process.env.OVERSEERR_URL + "/api/v1";
 			requestObj.headers = {
 				"X-Api-Key": process.env.OVERSEERR_API_KEY
 			};
