@@ -2,7 +2,6 @@ import OverseerrAPI from "./overseerr";
 import PlexAPI from "./plex";
 import _ from "lodash";
 
-// Wrap in async function in order to use await
 (async function app() {
 	// Get all the requests from Overseerr.
 	const requests = await OverseerrAPI.getAllRequests();
