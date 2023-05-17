@@ -7,7 +7,5 @@
 		"sourceMap": true,
 		"outDir": "dist"
 	},
-	"libs": [
-		"es2015"
-	]
+	"libs": ["es2015"]
 }

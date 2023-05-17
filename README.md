@@ -32,6 +32,8 @@ OVERSEERR_URL=http://overseerr-ip-address:5055
 OVERSEERR_API_KEY=********************
 PLEX_URL=http://plex-server-ip-address:32400
 PLEX_TOKEN=********************
+TAUTULLI_URL=http://tautulli-ip-address:8181
+TAUTULLI_API_KEY=********************
 ```
 
 Build and run with:
