@@ -1,11 +1,33 @@
+/**
+ * Contains all the methods required to interact with Overseerr request managemenet API, as it relates to this project.
+ *
+ * @author Jess Latimer @manybothans
+ *
+ * @todo Define types for requests and responses.
+ *
+ * @remarks
+ * Overseerr API docs available at https://api-docs.overseerr.dev
+ */
+
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import _ from "lodash";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Overseerr API docs available at
-// https://api-docs.overseerr.dev
+/**
+ * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
+ */
+type Dictionary = {
+	[key: string]: unknown;
+};
 
+/**
+ * @typedef {Object} OverseerrPaginationOptions - Creates a new Type for the Plex collection creation options.
+ * @property {number} take - (Optional) Max number of items returned per page.
+ * @property {number} skip - (Optional)  Number of items to skip, not pages.
+ * @property {string} filter - (Optional) Request statuses to include. Available values : all, approved, available, pending, processing, unavailable, failed.
+ * @property {string} sort - (Optional) How to sort the results. Available values : added, modified.
+ */
 type OverseerrPaginationOptions = {
 	take?: number;
 	skip?: number;
@@ -13,20 +35,39 @@ type OverseerrPaginationOptions = {
 	sort?: string;
 };
 
+/**
+ * Defualt max number of results to return per page.
+ */
 const PAGINATION_MAX_SIZE = 100;
 
+/**
+ * This is the top-level OverseerrAPI singleton object.
+ */
 const OverseerrAPI = {
-	// Returns the current Overseerr status in a JSON object.
-	getStatus: async function () {
+	/**
+	 * Returns the current Overseerr status in a JSON object.
+	 *
+	 * @return {Promise<Dictionary>} Object containing status of Overseerr instance.
+	 */
+	getStatus: async function (): Promise<Dictionary> {
 		const data = await this.callApi({ url: "/status" });
 		this.debug(data);
 		return data;
 	},
-	// Returns all requests if the user has the ADMIN or MANAGE_REQUESTS permissions. Otherwise, only the logged-in user's requests are returned.
-	// If the requestedBy parameter is specified, only requests from that particular user ID will be returned.
+	/**
+	 * Returns one page of media request objects, based on provided pagination options.
+	 *
+	 * @remarks
+	 * Returns all requests if the user has the ADMIN or MANAGE_REQUESTS permissions. Otherwise, only the logged-in user's requests are returned.
+	 * If the requestedBy parameter is specified, only requests from that particular user ID will be returned.
+	 *
+	 * @param {OverseerrPaginationOptions} params - Pagination options for the request. See Type Definition for details.
+	 *
+	 * @return {Promise<Dictionary>} The data portion of the HTTP response, containing info on the returned page of results and the page of resuts themselves.
+	 */
 	getPaginatedRequests: async function (
-		params = <OverseerrPaginationOptions>{}
-	) {
+		params: OverseerrPaginationOptions = <OverseerrPaginationOptions>{}
+	): Promise<Dictionary> {
 		params.take = params.take || PAGINATION_MAX_SIZE; // Max number of items returned per page
 		params.skip = params.skip || 0; // "skip" is number of items, not pages.
 		params.filter = params.filter || "available"; // Available values : all, approved, available, pending, processing, unavailable, failed
@@ -39,7 +80,15 @@ const OverseerrAPI = {
 		this.debug(data);
 		return data;
 	},
-	// Loop through paginated results to build full collection of requests.
+	/**
+	 * Returns all request objects from the system, based on provided filter string. Loops through paginated results to build full collection of requests.
+	 *
+	 * @todo Fix type type declarations
+	 *
+	 * @param {string} filter - (Optional) Request statuses to include. Available values : all, approved, available (default), pending, processing, unavailable, failed.
+	 *
+	 * @return {Promise<Array<Dictionary>>} An array containing all the request objects that match the filter.
+	 */
 	getAllRequests: async function (filter = "available") {
 		let data = await this.getPaginatedRequests({
 			filter: filter,
@@ -104,8 +153,16 @@ const OverseerrAPI = {
 		this.debug(requests);
 		return requests;
 	},
-	// Abstracted API calls to Overseerr, adds URL and API Key automatically.
-	callApi: async function (requestObj: AxiosRequestConfig) {
+	/**
+	 * Abstracted API calls to Overseerr, adds URL and API Key automatically.
+	 *
+	 * @param {AxiosRequestConfig} requestObj - The Axios request config object detailing the desired HTTP request.
+	 *
+	 * @return {Promise<Dictionary>} The data portion of the response from the Axios HTTP request, or NULL if request failed.
+	 */
+	callApi: async function (
+		requestObj: AxiosRequestConfig
+	): Promise<Dictionary> {
 		try {
 			requestObj = requestObj || {};
 			requestObj.baseURL = process.env.OVERSEERR_URL + "/api/v1";
@@ -122,7 +179,14 @@ const OverseerrAPI = {
 			return null;
 		}
 	},
-	debug: function (data) {
+	/**
+	 * Debugger helper function. Only prints to console if NODE_ENV in .env file is set to "development".
+	 *
+	 * @param {unknown} data - Anything you want to print to console.
+	 *
+	 * @return None.
+	 */
+	debug: function (data: unknown) {
 		if (process.env.NODE_ENV == "development") {
 			console.log(data);
 		}

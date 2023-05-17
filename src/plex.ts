@@ -174,7 +174,7 @@ const PlexAPI = {
 		options.sort = options.sort ? options.sort : "titleSort";
 		options.smart = 1; //Force smart collections only for this method
 
-		// TODO This call needs to be refactored to be claener.
+		// TODO This call needs to be refactored to be cleaner.
 		// Looks like you can't set titleSort in this command
 		const data = await this.callApi({
 			url: `/library/collections?type=${
