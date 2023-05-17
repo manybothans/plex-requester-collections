@@ -1,22 +1,18 @@
 /**
- * @file Contains all the methods required to interact with Plex Media Server API, as it relates to this project.
+ * Contains all the methods required to interact with Plex Media Server API, as it relates to this project.
+ *
  * @author Jess Latimer @manybothans
  *
  * @todo Define types for Plex API requests and responses.
  *
  * @remarks
- *
- * Plex API Docs used to build this available at https://www.plexopedia.com/plex-media-server/api/library/movie-update/
- * Docs are incomplete, but good starting point. I had to do some reverse engineering.
+ * Tautulli API docs available at https://github.com/Tautulli/Tautulli/wiki/Tautulli-API-Reference
  */
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import _ from "lodash";
+// import _ from "lodash";
 import dotenv from "dotenv";
 dotenv.config();
-
-// Tautulli API docs available at
-// https://github.com/Tautulli/Tautulli/wiki/Tautulli-API-Reference
 
 const TautulliAPI = {
 	// Returns Arnold quote

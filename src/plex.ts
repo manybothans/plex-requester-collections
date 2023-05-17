@@ -1,5 +1,6 @@
 /**
- * @file Contains all the methods required to interact with Plex Media Server API, as it relates to this project.
+ * Contains all the methods required to interact with Plex Media Server API, as it relates to this project.
+ *
  * @author Jess Latimer @manybothans
  *
  * @todo Define types for Plex API requests and responses.
