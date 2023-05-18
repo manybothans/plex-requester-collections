@@ -32,6 +32,10 @@ OVERSEERR_URL=http://overseerr-ip-address:5055
 OVERSEERR_API_KEY=********************
 PLEX_URL=http://plex-server-ip-address:32400
 PLEX_TOKEN=********************
+RADARR_URL=http://radarr-ip-address:7878
+RADARR_API_KEY=********************
+SONARR_URL=http://sonarr-ip-address:7878
+SONARR_API_KEY=********************
 TAUTULLI_URL=http://tautulli-ip-address:8181
 TAUTULLI_API_KEY=********************
 ```

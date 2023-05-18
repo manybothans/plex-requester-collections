@@ -13,6 +13,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import _ from "lodash";
 import dotenv from "dotenv";
+import { error } from "console";
 dotenv.config();
 
 /**
@@ -28,7 +29,7 @@ const PlexTypes = {
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
  */
 type Dictionary = {
-	[key: string]: unknown;
+	[key: string]: unknown | Dictionary;
 };
 
 /**
@@ -377,6 +378,11 @@ const PlexAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		if (!process.env.PLEX_URL || !process.env.PLEX_TOKEN) {
+			throw error(
+				"Missing .env file containing PLEX_URL and/or PLEX_TOKEN. See README.md"
+			);
+		}
 		try {
 			requestObj = requestObj || {};
 			requestObj.baseURL = process.env.PLEX_URL;

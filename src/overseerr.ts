@@ -12,13 +12,18 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import _ from "lodash";
 import dotenv from "dotenv";
+import { error } from "console";
 dotenv.config();
 
 /**
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
+ * @typedef {DictionaryObj} DictionaryObj - Creates a new type for objects with unknown properties and nested object, e.g. responses from undocumented 3rd party APIs.
  */
 type Dictionary = {
 	[key: string]: unknown;
+};
+type DictionaryObj = {
+	[key: string]: Dictionary;
 };
 
 /**
@@ -87,9 +92,11 @@ const OverseerrAPI = {
 	 *
 	 * @param {string} filter - (Optional) Request statuses to include. Available values : all, approved, available (default), pending, processing, unavailable, failed.
 	 *
-	 * @return {Promise<Array<Dictionary>>} An array containing all the request objects that match the filter.
+	 * @return {Promise<Array<DictionaryObj>>} An array containing all the request objects that match the filter.
 	 */
-	getAllRequests: async function (filter = "available") {
+	getAllRequests: async function (
+		filter = "available"
+	): Promise<Array<DictionaryObj>> {
 		let data = await this.getPaginatedRequests({
 			filter: filter,
 			skip: 0,
@@ -163,6 +170,11 @@ const OverseerrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		if (!process.env.OVERSEERR_URL || !process.env.OVERSEERR_API_KEY) {
+			throw error(
+				"Missing .env file containing OVERSEERR_URL and/or OVERSEERR_API_KEY. See README.md"
+			);
+		}
 		try {
 			requestObj = requestObj || {};
 			requestObj.baseURL = process.env.OVERSEERR_URL + "/api/v1";

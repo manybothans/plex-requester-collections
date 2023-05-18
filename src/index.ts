@@ -1,14 +1,27 @@
 import PlexAPI from "./plex";
 import OverseerrAPI from "./overseerr";
 import TautulliAPI from "./tautulli";
+import RadarrAPI from "./radarr";
+import SonarrAPI from "./sonarr";
 import _ from "lodash";
 
 (async function app() {
-	TautulliAPI.arnold();
-	TautulliAPI.getHistory({ rating_key: 22075 });
+	// Feature flag for Tautulli integration. For dev. Default off.
+	if (process.env.FEATURE_TAUTULLI === "1") {
+		// TautulliAPI.arnold();
+		TautulliAPI.getHistory({ rating_key: 22075 });
+	}
+	// Feature flag for Radarr integration. For dev. Default off.
+	if (process.env.FEATURE_RADARR === "1") {
+		RadarrAPI.getHealth();
+	}
+	// Feature flag for Sonarr integration. For dev. Default off.
+	if (process.env.FEATURE_SONARR === "1") {
+		SonarrAPI.getHealth();
+	}
 
-	// Feature flag to turn off tagging media with requester and creating corresponding smart collections. For development.
-	if (parseInt(process.env.FEATURE_REQUESTER_COLLECTIONS) !== 0) {
+	// Feature flag to turn off tagging media with requester and creating corresponding smart collections. For development. Default on.
+	if (process.env.FEATURE_REQUESTER_COLLECTIONS !== "0") {
 		// Get all the requests from Overseerr.
 		const requests = await OverseerrAPI.getAllRequests();
 
