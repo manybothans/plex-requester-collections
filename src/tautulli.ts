@@ -22,25 +22,25 @@ type Dictionary = {
 
 /**
  * @typedef {Object} TautulliHistoryRequestOptions - Type for the history object that gets returned from Tautulli get_history.
-    @property {number} grouping - (Optional) 0 or 1
-    @property {number} include_activity - (Optional) 0 or 1
-    @property {string} user - (Optional) Username of the user you want history for.
-    @property {number} user_id - (Optional) ID of the user you want history for.
-    @property {number} rating_key - (Optional) ID of the media item you want history for (e.g. Movie or Episode).
-    @property {number} parent_rating_key - (Optional) ID of the parent of the media item you want history for (e.g. Season if it was a show).
-    @property {number} grandparent_rating_key - (Optional) ID of the grandparent of the media item you want history for (e.g. Series if it was a show).
-    @property {string} start_date - (Optional) History for the exact date, "YYYY-MM-DD"
-    @property {string} before - (Optional) History before and including the date, "YYYY-MM-DD"
-    @property {string} after - (Optional) History after and including the date, "YYYY-MM-DD"
-    @property {number} section_id - (Optional) Plex library section ID (I think).
-    @property {string} media_type - (Optional) The type of media item you want history for. Possible values: "movie", "episode", "track", "live", "collection", "playlist"
-    @property {string} transcode_decision - (Optional) "direct play", "copy", "transcode",
-    @property {string} guid - (Optional) Plex guid for an item, e.g. "com.plexapp.agents.thetvdb://121361/6/1"
-    @property {string} order_column - (Optional) "date", "friendly_name", "ip_address", "platform", "player", "full_title", "started", "paused_counter", "stopped", "duration"
-    @property {string} order_dir - (Optional) "desc" or "asc"
-    @property {number} start - (Optional) Pagination option, Row to start from, default 0.
-    @property {number} length - (Optional) Pagination option, Number of items to return, default 25.
-    @property {string} search - (Optional) A string to search for, "Thrones"
+ * @property {number} grouping - (Optional) 0 or 1
+ * @property {number} include_activity - (Optional) 0 or 1
+ * @property {string} user - (Optional) Username of the user you want history for.
+ * @property {number} user_id - (Optional) ID of the user you want history for.
+ * @property {number} rating_key - (Optional) ID of the media item you want history for (e.g. Movie or Episode).
+ * @property {number} parent_rating_key - (Optional) ID of the parent of the media item you want history for (e.g. Season if it was a show).
+ * @property {number} grandparent_rating_key - (Optional) ID of the grandparent of the media item you want history for (e.g. Series if it was a show).
+ * @property {string} start_date - (Optional) History for the exact date, "YYYY-MM-DD"
+ * @property {string} before - (Optional) History before and including the date, "YYYY-MM-DD"
+ * @property {string} after - (Optional) History after and including the date, "YYYY-MM-DD"
+ * @property {number} section_id - (Optional) Plex library section ID (I think).
+ * @property {string} media_type - (Optional) The type of media item you want history for. Possible values: "movie", "episode", "track", "live", "collection", "playlist"
+ * @property {string} transcode_decision - (Optional) "direct play", "copy", "transcode",
+ * @property {string} guid - (Optional) Plex guid for an item, e.g. "com.plexapp.agents.thetvdb://121361/6/1"
+ * @property {string} order_column - (Optional) "date", "friendly_name", "ip_address", "platform", "player", "full_title", "started", "paused_counter", "stopped", "duration"
+ * @property {string} order_dir - (Optional) "desc" or "asc"
+ * @property {number} start - (Optional) Pagination option, Row to start from, default 0.
+ * @property {number} length - (Optional) Pagination option, Number of items to return, default 25.
+ * @property {string} search - (Optional) A string to search for, "Thrones"
  */
 type TautulliHistoryRequestOptions = {
 	grouping?: number;
