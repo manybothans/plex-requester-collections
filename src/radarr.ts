@@ -22,6 +22,138 @@ interface Dictionary {
 	[key: string]: unknown | Dictionary;
 }
 
+interface RadarrLanguage {
+	id: number;
+	name: string;
+}
+interface RadarrTag {
+	id: number;
+	label: string;
+}
+interface RadarrAltTitle {
+	sourceType: string;
+	movieMetadataId: number;
+	title: string;
+	sourceId: number;
+	votes: number;
+	voteCount: number;
+	language: Array<RadarrLanguage>;
+	id: number;
+}
+interface RadarrImage {
+	coverType: string;
+	url: string;
+	remoteUrl: string;
+}
+interface RadarrSingleRating {
+	votes: number;
+	value: number;
+	type: string;
+}
+interface RadarrRatings {
+	imdb: RadarrSingleRating;
+	tmdb: RadarrSingleRating;
+	metacritic: RadarrSingleRating;
+	rottenTomatoes: RadarrSingleRating;
+}
+interface RadarrQualityProfile {
+	id: number;
+	name: string;
+	source: string;
+	resolution: number;
+	modifier: string;
+}
+interface RadarrQualityRevision {
+	version: number;
+	real: number;
+	isRepack: boolean;
+}
+interface RadarrQuality {
+	quality: RadarrQualityProfile;
+	revision: RadarrQualityRevision;
+}
+interface RadarrMediaInfo {
+	audioBitrate: number;
+	audioChannels: number;
+	audioCodec: string;
+	audioLanguages: string;
+	audioStreamCount: number;
+	videoBitDepth: number;
+	videoBitrate: number;
+	videoCodec: string;
+	videoDynamicRangeType: string;
+	videoFps: number;
+	resolution: string;
+	runTime: string;
+	scanType: string;
+	subtitles: string;
+}
+interface RadarrMediaFileDetails {
+	movieId: number;
+	relativePath: string;
+	path: string;
+	size: number;
+	dateAdded: string;
+	indexerFlags: number;
+	quality: RadarrQuality;
+	mediaInfo: RadarrMediaInfo;
+	qualityCutoffNotMet: boolean;
+	languages: Array<RadarrLanguage>;
+	edition: string;
+	id: number;
+}
+interface RadarrCollection {
+	title: string;
+	tmdbId: number;
+	monitored: boolean;
+	qualityProfileId: number;
+	searchOnAdd: boolean;
+	minimumAvailability: string;
+	images: Array<RadarrImage>;
+	added: string;
+	id: number;
+}
+interface RadarrMediaObject {
+	title: string;
+	originalTitle: string;
+	originalLanguage: RadarrLanguage;
+	alternateTitles: Array<RadarrAltTitle>;
+	secondaryYearSourceId: number;
+	sortTitle: string;
+	sizeOnDisk: number;
+	status: string;
+	overview: string;
+	inCinemas: string;
+	physicalRelease: string;
+	digitalRelease: string;
+	images: Array<RadarrImage>;
+	website: string;
+	year: number;
+	hasFile: boolean;
+	youTubeTrailerId: string;
+	studio: string;
+	path: string;
+	qualityProfileId: number;
+	monitored: boolean;
+	minimumAvailability: string;
+	isAvailable: boolean;
+	folderName: string;
+	runtime: number;
+	cleanTitle: string;
+	imdbId: string;
+	tmdbId: number;
+	titleSlug: string;
+	certification: string;
+	genres: Array<string>;
+	tags: Array<number>;
+	added: string;
+	ratings: RadarrRatings;
+	movieFile: RadarrMediaFileDetails;
+	collection: RadarrCollection;
+	popularity: number;
+	id: number;
+}
+
 /**
  * This is the top-level RadarrAPI singleton object.
  */
@@ -39,9 +171,9 @@ const RadarrAPI = {
 	/**
 	 * Get a list of all the tags configured on the server.
 	 *
-	 * @return {Promise<Array<Dictionary>>} Returns the list of tags from the server.
+	 * @return {Promise<Array<RadarrTag>>} Returns the list of tags from the server.
 	 */
-	getTags: async function (): Promise<Array<Dictionary>> {
+	getTags: async function (): Promise<Array<RadarrTag>> {
 		const data = await this.callApi({ url: "/tag" });
 		this.debug(data);
 		return data;
@@ -51,9 +183,9 @@ const RadarrAPI = {
 	 *
 	 * @param {string} tag - The string label for the new tag to create.
 	 *
-	 * @return {Promise<Dictionary>} Returns the label and ID of the new tag.
+	 * @return {Promise<RadarrTag>} Returns the label and ID of the new tag.
 	 */
-	createTag: async function (tag: string): Promise<Dictionary> {
+	createTag: async function (tag: string): Promise<RadarrTag> {
 		const data = await this.callApi({
 			url: "/tag",
 			method: "post",
@@ -70,12 +202,12 @@ const RadarrAPI = {
 	 * @param {number} itemId - The ID of the media item you want.
 	 * @param {string} tag - The string label of the tag you want to add.
 	 *
-	 * @return {Promise<Dictionary>} The details of the updated media item.
+	 * @return {Promise<RadarrMediaObject>} The details of the updated media item.
 	 */
 	addTagToMediaItem: async function (
 		itemId: number,
 		tag: string
-	): Promise<Dictionary> {
+	): Promise<RadarrMediaObject> {
 		const tagDetails = await RadarrAPI.createTag(tag);
 		const movieDetails = await RadarrAPI.getMediaItem(itemId);
 		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
@@ -86,11 +218,11 @@ const RadarrAPI = {
 	/**
 	 * Get the details for a given media item.
 	 *
-	 * @param {number} itemId - The ID of the media item you want.-=
+	 * @param {number} itemId - The ID of the media item you want.
 	 *
-	 * @return {Promise<Dictionary>} Returns the details of the media item.
+	 * @return {Promise<RadarrMediaObject>} Returns the details of the media item.
 	 */
-	getMediaItem: async function (itemId: number) {
+	getMediaItem: async function (itemId: number): Promise<RadarrMediaObject> {
 		const data = await this.callApi({
 			url: "/movie/" + itemId
 		});
@@ -101,14 +233,14 @@ const RadarrAPI = {
 	 * Update the details of a media item on the server.
 	 *
 	 * @param {number} itemId - The ID of the media item you want to update.
-	 * @param {Dictionary} options - The details you want to update on the media item. Must actually contain the whole movie object apparently.
+	 * @param {RadarrMediaObject} options - The details you want to update on the media item. Must actually contain the whole movie object apparently.
 	 *
-	 * @return {Promise<Dictionary>} Returns the details of the media item.
+	 * @return {Promise<RadarrMediaObject>} Returns the details of the media item.
 	 */
 	updateMediaItem: async function (
 		itemId: number,
-		options
-	): Promise<Dictionary> {
+		options: RadarrMediaObject
+	): Promise<RadarrMediaObject> {
 		const data = await this.callApi({
 			url: "/movie/" + itemId,
 			method: "put",
@@ -270,7 +402,16 @@ Radarr movie object
     size: 682500913,
     dateAdded: '2022-10-12T18:34:11Z',
     indexerFlags: 0,
-    quality: { quality: [Object], revision: [Object] },
+    quality: {
+		quality: {
+			id: 6,
+			name: 'Bluray-720p',
+			source: 'bluray',
+			resolution: 720,
+			modifier: 'none'
+		},
+		revision: { version: 1, real: 0, isRepack: false }
+	},
     mediaInfo: {
       audioBitrate: 32011,
       audioChannels: 2,
