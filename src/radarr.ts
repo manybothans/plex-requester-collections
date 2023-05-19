@@ -113,7 +113,7 @@ interface RadarrCollection {
 	added: string;
 	id: number;
 }
-interface RadarrMediaObject {
+interface RadarrMediaDetails {
 	title: string;
 	originalTitle: string;
 	originalLanguage: RadarrLanguage;
@@ -202,12 +202,12 @@ const RadarrAPI = {
 	 * @param {number} itemId - The ID of the media item you want.
 	 * @param {string} tag - The string label of the tag you want to add.
 	 *
-	 * @return {Promise<RadarrMediaObject>} The details of the updated media item.
+	 * @return {Promise<RadarrMediaDetails>} The details of the updated media item.
 	 */
 	addTagToMediaItem: async function (
 		itemId: number,
 		tag: string
-	): Promise<RadarrMediaObject> {
+	): Promise<RadarrMediaDetails> {
 		const tagDetails = await RadarrAPI.createTag(tag);
 		const movieDetails = await RadarrAPI.getMediaItem(itemId);
 		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
@@ -220,9 +220,9 @@ const RadarrAPI = {
 	 *
 	 * @param {number} itemId - The ID of the media item you want.
 	 *
-	 * @return {Promise<RadarrMediaObject>} Returns the details of the media item.
+	 * @return {Promise<RadarrMediaDetails>} Returns the details of the media item.
 	 */
-	getMediaItem: async function (itemId: number): Promise<RadarrMediaObject> {
+	getMediaItem: async function (itemId: number): Promise<RadarrMediaDetails> {
 		const data = await this.callApi({
 			url: "/movie/" + itemId
 		});
@@ -233,14 +233,14 @@ const RadarrAPI = {
 	 * Update the details of a media item on the server.
 	 *
 	 * @param {number} itemId - The ID of the media item you want to update.
-	 * @param {RadarrMediaObject} options - The details you want to update on the media item. Must actually contain the whole movie object apparently.
+	 * @param {RadarrMediaDetails} options - The details you want to update on the media item. Must actually contain the whole movie object apparently.
 	 *
-	 * @return {Promise<RadarrMediaObject>} Returns the details of the media item.
+	 * @return {Promise<RadarrMediaDetails>} Returns the details of the media item.
 	 */
 	updateMediaItem: async function (
 		itemId: number,
-		options: RadarrMediaObject
-	): Promise<RadarrMediaObject> {
+		options: RadarrMediaDetails
+	): Promise<RadarrMediaDetails> {
 		const data = await this.callApi({
 			url: "/movie/" + itemId,
 			method: "put",
