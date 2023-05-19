@@ -28,9 +28,9 @@ const PlexTypes = {
 /**
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
  */
-type Dictionary = {
+interface Dictionary {
 	[key: string]: unknown | Dictionary;
-};
+}
 
 /**
  * @typedef {Object} PlexCollectionOptions - Creates a new Type for the Plex collection creation options.
@@ -42,7 +42,7 @@ type Dictionary = {
  * @property {string} sort - (Optional) How the collection should be sorted. Some options: addedAt, titleSort, title. May need to dig into browser console on Plex to find others.
  * @property {string} query - The query string for the Smart Filter query. These can be super complicated, may need to dig into browser console on Plex.
  */
-type PlexCollectionOptions = {
+interface PlexCollectionOptions {
 	sectionId: number;
 	smart?: number;
 	title: string;
@@ -50,7 +50,7 @@ type PlexCollectionOptions = {
 	itemType: number;
 	sort?: string;
 	query: string;
-};
+}
 
 /**
  * This is the top-level PlexAPI singleton object.

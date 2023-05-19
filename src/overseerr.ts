@@ -19,12 +19,12 @@ dotenv.config();
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
  * @typedef {DictionaryObj} DictionaryObj - Creates a new type for objects with unknown properties and nested object, e.g. responses from undocumented 3rd party APIs.
  */
-type Dictionary = {
+interface Dictionary {
 	[key: string]: unknown;
-};
-type DictionaryObj = {
+}
+interface DictionaryObj {
 	[key: string]: Dictionary;
-};
+}
 
 /**
  * @typedef {Object} OverseerrPaginationOptions - Creates a new Type for the Plex collection creation options.
@@ -33,12 +33,12 @@ type DictionaryObj = {
  * @property {string} filter - (Optional) Request statuses to include. Available values : all, approved, available, pending, processing, unavailable, failed.
  * @property {string} sort - (Optional) How to sort the results. Available values : added, modified.
  */
-type OverseerrPaginationOptions = {
+interface OverseerrPaginationOptions {
 	take?: number;
 	skip?: number;
 	filter?: string;
 	sort?: string;
-};
+}
 
 /**
  * Defualt max number of results to return per page.

@@ -13,7 +13,7 @@ import _ from "lodash";
 	}
 	// Feature flag for Radarr integration. For dev. Default off.
 	if (process.env.FEATURE_RADARR === "1") {
-		// RadarrAPI.getHealth();
+		RadarrAPI.getHealth();
 		// RadarrAPI.getTags();
 		// RadarrAPI.createTag("newtag");
 		// const movie = await RadarrAPI.getMediaItem(128);

@@ -18,9 +18,9 @@ dotenv.config();
 /**
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
  */
-type Dictionary = {
+interface Dictionary {
 	[key: string]: unknown | Dictionary;
-};
+}
 
 /**
  * This is the top-level SonarrAPI singleton object.

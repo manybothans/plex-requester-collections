@@ -18,9 +18,9 @@ dotenv.config();
 /**
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
  */
-type Dictionary = {
+interface Dictionary {
 	[key: string]: unknown | Dictionary;
-};
+}
 
 /**
  * This is the top-level RadarrAPI singleton object.
@@ -167,3 +167,145 @@ const RadarrAPI = {
 };
 
 export default RadarrAPI;
+
+/*
+Radarr movie object
+
+{
+  title: 'Eraser',
+  originalTitle: 'Eraser',
+  originalLanguage: { id: 1, name: 'English' },
+  alternateTitles: [
+    {
+      sourceType: 'tmdb',
+      movieMetadataId: 126,
+      title: 'El Protector',
+      sourceId: 0,
+      votes: 0,
+      voteCount: 0,
+      language: [Object],
+      id: 696
+    },
+    {
+      sourceType: 'tmdb',
+      movieMetadataId: 126,
+      title: 'Eraser (Eliminador)',
+      sourceId: 0,
+      votes: 0,
+      voteCount: 0,
+      language: [Object],
+      id: 697
+    },
+    {
+      sourceType: 'tmdb',
+      movieMetadataId: 126,
+      title: 'Likvidátor',
+      sourceId: 0,
+      votes: 0,
+      voteCount: 0,
+      language: [Object],
+      id: 698
+    },
+    {
+      sourceType: 'tmdb',
+      movieMetadataId: 126,
+      title: '毁灭者',
+      sourceId: 0,
+      votes: 0,
+      voteCount: 0,
+      language: [Object],
+      id: 699
+    }
+  ],
+  secondaryYearSourceId: 0,
+  sortTitle: 'eraser',
+  sizeOnDisk: 682500913,
+  status: 'released',
+  overview: "U.S. Marshall John Kruger erases the identities of people enrolled in the Witness Protection Program. His current assignment is to protect Lee Cullen, who's uncovered evidence that the weapons manufacturer she works for has been selling to terrorist groups. When Kruger discovers that there's a corrupt agent within the program, he must guard his own life while trying to protect Lee's.",
+  inCinemas: '1996-06-21T00:00:00Z',
+  physicalRelease: '1997-03-25T00:00:00Z',
+  digitalRelease: '2002-05-10T00:00:00Z',
+  images: [
+    {
+      coverType: 'poster',
+      url: '/MediaCover/128/poster.jpg?lastWrite=638177494775101943',
+      remoteUrl: 'https://image.tmdb.org/t/p/original/1FUV5ZmEkbxvqwQW0az4tFFOSmo.jpg'
+    },
+    {
+      coverType: 'fanart',
+      url: '/MediaCover/128/fanart.jpg?lastWrite=638011964523950319',
+      remoteUrl: 'https://image.tmdb.org/t/p/original/8n6ZCFJWwK7UiX7NYuIEvHLRPYG.jpg'
+    }
+  ],
+  website: 'http://www.warnerbros.com/eraser',
+  year: 1996,
+  hasFile: true,
+  youTubeTrailerId: 'GZNhdAuUhpA',
+  studio: 'Kopelson Entertainment',
+  path: '/data/Movies/Eraser (1996) [x264]',
+  qualityProfileId: 7,
+  monitored: true,
+  minimumAvailability: 'announced',
+  isAvailable: true,
+  folderName: '/data/Movies/Eraser (1996) [x264]',
+  runtime: 115,
+  cleanTitle: 'eraser',
+  imdbId: 'tt0116213',
+  tmdbId: 9268,
+  titleSlug: '9268',
+  certification: 'R',
+  genres: [ 'Action', 'Drama', 'Mystery' ],
+  tags: [ 1 ],
+  added: '2022-10-12T18:30:03Z',
+  ratings: {
+    imdb: { votes: 114408, value: 6.2, type: 'user' },
+    tmdb: { votes: 1569, value: 6, type: 'user' },
+    metacritic: { votes: 0, value: 56, type: 'user' },
+    rottenTomatoes: { votes: 0, value: 42, type: 'user' }
+  },
+  movieFile: {
+    movieId: 128,
+    relativePath: 'Eraser (1996) [Bluray-720p x264 AAC].mp4',
+    path: '/data/Movies/Eraser (1996) [x264]/Eraser (1996) [Bluray-720p x264 AAC].mp4',
+    size: 682500913,
+    dateAdded: '2022-10-12T18:34:11Z',
+    indexerFlags: 0,
+    quality: { quality: [Object], revision: [Object] },
+    mediaInfo: {
+      audioBitrate: 32011,
+      audioChannels: 2,
+      audioCodec: 'AAC',
+      audioLanguages: 'und',
+      audioStreamCount: 1,
+      videoBitDepth: 8,
+      videoBitrate: 759791,
+      videoCodec: 'x264',
+      videoDynamicRangeType: '',
+      videoFps: 23.976,
+      resolution: '1280x528',
+      runTime: '1:54:31',
+      scanType: 'Progressive',
+      subtitles: ''
+    },
+    qualityCutoffNotMet: false,
+    languages: [ [Object] ],
+    edition: '',
+    id: 127
+  },
+  collection: {
+    title: 'Eraser Collection',
+    tmdbId: 985085,
+    monitored: false,
+    qualityProfileId: 0,
+    searchOnAdd: false,
+    minimumAvailability: 'tba',
+    images: [],
+    added: '0001-01-01T08:12:00Z',
+    id: 0
+  },
+  popularity: 19.489,
+  id: 128
+}
+
+
+*/

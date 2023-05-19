@@ -16,9 +16,9 @@ dotenv.config();
 /**
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
  */
-type Dictionary = {
+interface Dictionary {
 	[key: string]: unknown | Dictionary;
-};
+}
 
 /**
  * @typedef {Object} TautulliHistoryRequestOptions - Type for the history object that gets returned from Tautulli get_history.
@@ -42,7 +42,7 @@ type Dictionary = {
  * @property {number} length - (Optional) Pagination option, Number of items to return, default 25.
  * @property {string} search - (Optional) A string to search for, "Thrones"
  */
-type TautulliHistoryRequestOptions = {
+interface TautulliHistoryRequestOptions {
 	grouping?: number;
 	include_activity?: number;
 	user?: string;
@@ -62,7 +62,7 @@ type TautulliHistoryRequestOptions = {
 	start?: number;
 	length?: number;
 	search?: string;
-};
+}
 
 /**
  * @typedef {Object} TautulliHistoryObject - Type for the history object that gets returned from Tautulli get_history.
@@ -111,7 +111,7 @@ type TautulliHistoryRequestOptions = {
  * @property {unknown} state -
  * @property {unknown} session_key -
  */
-type TautulliHistoryObject = {
+interface TautulliHistoryObject {
 	reference_id: number;
 	row_id: number;
 	id: number;
@@ -156,7 +156,7 @@ type TautulliHistoryObject = {
 	group_ids: string;
 	state: unknown;
 	session_key: unknown;
-};
+}
 
 /**
  * This is the top-level TautulliAPI singleton object.
