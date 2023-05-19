@@ -13,7 +13,13 @@ import _ from "lodash";
 	}
 	// Feature flag for Radarr integration. For dev. Default off.
 	if (process.env.FEATURE_RADARR === "1") {
-		RadarrAPI.getHealth();
+		// RadarrAPI.getHealth();
+		// RadarrAPI.getTags();
+		// RadarrAPI.createTag("newtag");
+		// const movie = await RadarrAPI.getMediaItem(128);
+		// movie.tags.push(1);
+		// RadarrAPI.updateMediaItem(128, movie);
+		// RadarrAPI.addTagToMediaItem(128, "newtag");
 	}
 	// Feature flag for Sonarr integration. For dev. Default off.
 	if (process.env.FEATURE_SONARR === "1") {

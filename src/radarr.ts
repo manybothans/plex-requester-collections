@@ -11,7 +11,7 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { error } from "console";
-// import _ from "lodash";
+import _ from "lodash";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -33,6 +33,90 @@ const RadarrAPI = {
 	 */
 	getHealth: async function (): Promise<Array<Dictionary>> {
 		const data = await this.callApi({ url: "/health" });
+		this.debug(data);
+		return data;
+	},
+	/**
+	 * Get a list of all the tags configured on the server.
+	 *
+	 * @return {Promise<Array<Dictionary>>} Returns the list of tags from the server.
+	 */
+	getTags: async function (): Promise<Array<Dictionary>> {
+		const data = await this.callApi({ url: "/tag" });
+		this.debug(data);
+		return data;
+	},
+	/**
+	 * Create a new tag.
+	 *
+	 * @param {string} tag - The string label for the new tag to create.
+	 *
+	 * @return {Promise<Dictionary>} Returns the label and ID of the new tag.
+	 */
+	createTag: async function (tag: string): Promise<Dictionary> {
+		const data = await this.callApi({
+			url: "/tag",
+			method: "post",
+			data: {
+				label: tag
+			}
+		});
+		this.debug(data);
+		return data;
+	},
+	/**
+	 * Helper function to add a tag to a media item.
+	 *
+	 * @param {number} itemId - The ID of the media item you want.
+	 * @param {string} tag - The string label of the tag you want to add.
+	 *
+	 * @return {Promise<Dictionary>} The details of the updated media item.
+	 */
+	addTagToMediaItem: async function (
+		itemId: number,
+		tag: string
+	): Promise<Dictionary> {
+		const tagDetails = await RadarrAPI.createTag(tag);
+		const movieDetails = await RadarrAPI.getMediaItem(itemId);
+		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
+		const result = RadarrAPI.updateMediaItem(itemId, movieDetails);
+		this.debug(result);
+		return result;
+	},
+	/**
+	 * Get the details for a given media item.
+	 *
+	 * @param {number} itemId - The ID of the media item you want.-=
+	 *
+	 * @return {Promise<Dictionary>} Returns the details of the media item.
+	 */
+	getMediaItem: async function (itemId: number) {
+		const data = await this.callApi({
+			url: "/movie/" + itemId
+		});
+		this.debug(data);
+		return data;
+	},
+	/**
+	 * Update the details of a media item on the server.
+	 *
+	 * @param {number} itemId - The ID of the media item you want to update.
+	 * @param {Dictionary} options - The details you want to update on the media item. Must actually contain the whole movie object apparently.
+	 *
+	 * @return {Promise<Dictionary>} Returns the details of the media item.
+	 */
+	updateMediaItem: async function (
+		itemId: number,
+		options
+	): Promise<Dictionary> {
+		const data = await this.callApi({
+			url: "/movie/" + itemId,
+			method: "put",
+			params: {
+				moveFiles: false
+			},
+			data: options
+		});
 		this.debug(data);
 		return data;
 	},
