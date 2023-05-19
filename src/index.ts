@@ -23,10 +23,13 @@ import _ from "lodash";
 	}
 	// Feature flag for Sonarr integration. For dev. Default off.
 	if (process.env.FEATURE_SONARR === "1") {
-		// SonarrAPI.getHealth();
-		const series = await SonarrAPI.getMediaItem(133);
-		console.log(series.seasons);
+		SonarrAPI.getHealth();
+		// const series = await SonarrAPI.getMediaItem(133);
+		// console.log(series.seasons);
 	}
+
+	// PlexAPI.getAllItems(1);
+	// OverseerrAPI.getAllRequests();
 
 	// Feature flag to turn off tagging media with requester and creating corresponding smart collections. For development. Default on.
 	if (process.env.FEATURE_REQUESTER_COLLECTIONS !== "0") {
