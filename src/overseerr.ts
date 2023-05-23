@@ -40,6 +40,73 @@ interface OverseerrPaginationOptions {
 	sort?: string;
 }
 
+interface OverseerrRequestMedia {
+	downloadStatus: Array<unknown>;
+	downloadStatus4k: Array<unknown>;
+	id: number;
+	mediaType: string;
+	tmdbId: number;
+	tvdbId: number;
+	imdbId: string;
+	status: number;
+	status4k: number;
+	createdAt: string;
+	updatedAt: string;
+	lastSeasonChange: string;
+	mediaAddedAt: string;
+	serviceId: number;
+	serviceId4k: number;
+	externalServiceId: number;
+	externalServiceId4k: number;
+	externalServiceSlug: string;
+	externalServiceSlug4k: string;
+	ratingKey: string;
+	ratingKey4k: string;
+	plexUrl: string;
+	iOSPlexUrl: string;
+	serviceUrl: string;
+}
+
+interface OverseerrUser {
+	permissions: number;
+	id: number;
+	email: string;
+	plexUsername: string;
+	username: string;
+	recoveryLinkExpirationDate: string;
+	userType: number;
+	plexId: number;
+	avatar: string;
+	movieQuotaLimit: number;
+	movieQuotaDays: number;
+	tvQuotaLimit: number;
+	tvQuotaDays: number;
+	createdAt: string;
+	updatedAt: string;
+	requestCount: number;
+	displayName: string;
+}
+
+interface OverseerrRequestDetails {
+	id: number;
+	status: number;
+	createdAt: string;
+	updatedAt: string;
+	type: string;
+	is4k: boolean;
+	serverId: unknown;
+	profileId: unknown;
+	rootFolder: unknown;
+	languageProfileId: unknown;
+	tags: Array<unknown>;
+	isAutoRequest: boolean;
+	media: OverseerrRequestMedia;
+	seasons: Array<Dictionary>;
+	modifiedBy: OverseerrUser;
+	requestedBy: OverseerrUser;
+	seasonCount: number;
+}
+
 /**
  * Defualt max number of results to return per page.
  */
@@ -88,15 +155,13 @@ const OverseerrAPI = {
 	/**
 	 * Returns all request objects from the system, based on provided filter string. Loops through paginated results to build full collection of requests.
 	 *
-	 * @todo Fix type type declarations
-	 *
 	 * @param {string} filter - (Optional) Request statuses to include. Available values : all, approved, available (default), pending, processing, unavailable, failed.
 	 *
-	 * @return {Promise<Array<DictionaryObj>>} An array containing all the request objects that match the filter.
+	 * @return {Promise<Array<OverseerrRequestDetails>>} An array containing all the request objects that match the filter.
 	 */
 	getAllRequests: async function (
 		filter = "available"
-	): Promise<Array<DictionaryObj>> {
+	): Promise<Array<OverseerrRequestDetails>> {
 		let data = await this.getPaginatedRequests({
 			filter: filter,
 			skip: 0,
@@ -206,3 +271,88 @@ const OverseerrAPI = {
 };
 
 export default OverseerrAPI;
+
+/*
+Request Object
+  {
+    id: 308,
+    status: 2,
+    createdAt: '2023-01-02T01:56:27.000Z',
+    updatedAt: '2023-01-02T01:56:27.000Z',
+    type: 'movie',
+    is4k: false,
+    serverId: null,
+    profileId: null,
+    rootFolder: null,
+    languageProfileId: null,
+    tags: null,
+    isAutoRequest: false,
+    media: {
+      downloadStatus: [],
+      downloadStatus4k: [],
+      id: 1988,
+      mediaType: 'movie',
+      tmdbId: 615777,
+      tvdbId: null,
+      imdbId: null,
+      status: 5,
+      status4k: 1,
+      createdAt: '2023-01-02T01:56:27.000Z',
+      updatedAt: '2023-01-31T10:15:00.000Z',
+      lastSeasonChange: '2023-01-02T01:56:27.000Z',
+      mediaAddedAt: '2023-01-31T10:11:45.000Z',
+      serviceId: 0,
+      serviceId4k: null,
+      externalServiceId: 1727,
+      externalServiceId4k: null,
+      externalServiceSlug: '615777',
+      externalServiceSlug4k: null,
+      ratingKey: '34931',
+      ratingKey4k: null,
+      plexUrl: 'https://app.plex.tv/desktop#!/server/baaf4cd09f73f07ddc676de067b123704c60cb1f/details?key=%2Flibrary%2Fmetadata%2F34931',
+      iOSPlexUrl: 'plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F34931&server=baaf4cd09f73f07ddc676de067b123704c60cb1f',
+      serviceUrl: 'http://192.168.68.123:7878/movie/615777'
+    },
+    seasons: [],
+    modifiedBy: {
+      permissions: 12583072,
+      id: 12,
+      email: 'joe.k.broadhurst@gmail.com',
+      plexUsername: 'joe.k.br',
+      username: null,
+      recoveryLinkExpirationDate: null,
+      userType: 1,
+      plexId: 2598679,
+      avatar: 'https://plex.tv/users/34bba7c2cd6b1937/avatar?c=1647470032',
+      movieQuotaLimit: null,
+      movieQuotaDays: null,
+      tvQuotaLimit: null,
+      tvQuotaDays: null,
+      createdAt: '2022-10-24T16:26:06.000Z',
+      updatedAt: '2023-02-08T03:00:05.000Z',
+      requestCount: 3,
+      displayName: 'joe.k.br'
+    },
+    requestedBy: {
+      permissions: 12583072,
+      id: 12,
+      email: 'joe.k.broadhurst@gmail.com',
+      plexUsername: 'joe.k.br',
+      username: null,
+      recoveryLinkExpirationDate: null,
+      userType: 1,
+      plexId: 2598679,
+      avatar: 'https://plex.tv/users/34bba7c2cd6b1937/avatar?c=1647470032',
+      movieQuotaLimit: null,
+      movieQuotaDays: null,
+      tvQuotaLimit: null,
+      tvQuotaDays: null,
+      createdAt: '2022-10-24T16:26:06.000Z',
+      updatedAt: '2023-02-08T03:00:05.000Z',
+      requestCount: 3,
+      displayName: 'joe.k.br'
+    },
+    seasonCount: 0
+  }
+
+*/

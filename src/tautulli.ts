@@ -65,7 +65,7 @@ interface TautulliHistoryRequestOptions {
 }
 
 /**
- * @typedef {Object} TautulliHistoryObject - Type for the history object that gets returned from Tautulli get_history.
+ * @typedef {Object} TautulliHistoryDetails - Type for the history object that gets returned from Tautulli get_history.
  * @property {number} reference_id -
  * @property {number} row_id -
  * @property {number} id - ID of this history object.
@@ -111,7 +111,7 @@ interface TautulliHistoryRequestOptions {
  * @property {unknown} state -
  * @property {unknown} session_key -
  */
-interface TautulliHistoryObject {
+export interface TautulliHistoryDetails {
 	reference_id: number;
 	row_id: number;
 	id: number;
@@ -186,11 +186,11 @@ const TautulliAPI = {
 	 *
 	 * @param {TautulliHistoryRequestOptions} searchOptions - The query options for which history items to return. "params.cmd" is auto-set to "get_history".
 	 *
-	 * @return {Promise<Array<TautulliHistoryObject>} Array containing all the history objects returned by the query, from a nested portion of the HTTP response data object.
+	 * @return {Promise<Array<TautulliHistoryDetails>} Array containing all the history objects returned by the query, from a nested portion of the HTTP response data object.
 	 */
 	getHistory: async function (
 		searchOptions: TautulliHistoryRequestOptions
-	): Promise<Array<TautulliHistoryObject>> {
+	): Promise<Array<TautulliHistoryDetails>> {
 		// Re-type to Dictionary in order to include cmd field, which we don't want to be able to set externally.
 		const params: Dictionary = <Dictionary>searchOptions || <Dictionary>{};
 		params.cmd = "get_history";
@@ -199,7 +199,7 @@ const TautulliAPI = {
 			params: params
 		});
 		this.debug(data?.data?.data);
-		return data;
+		return data?.data?.data;
 	},
 	/**
 	 * Abstracted API calls to Tautulli, adds URL and API Key automatically.

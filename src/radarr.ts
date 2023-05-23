@@ -199,6 +199,9 @@ const RadarrAPI = {
 	/**
 	 * Helper function to add a tag to a media item.
 	 *
+	 * @remark
+	 * This results in 3 different API calls.
+	 *
 	 * @param {number} itemId - The ID of the media item you want.
 	 * @param {string} tag - The string label of the tag you want to add.
 	 *
@@ -214,6 +217,27 @@ const RadarrAPI = {
 		const result = RadarrAPI.updateMediaItem(itemId, movieDetails);
 		this.debug(result);
 		return result;
+	},
+	/**
+	 * Get all the media items, or get a single media item matching a TMBD ID.
+	 *
+	 * @remark
+	 * This is useful to translate a TMDB ID from Overseerr or Plex to a Radarr ID, which is needed for updating a media item.
+	 *
+	 * @param {number} tmdbId - (Optional) The TMDB ID of the media item to search for.
+	 *
+	 * @return {Promise<Array<RadarrMediaDetails>>} Returns the details of the media item.
+	 */
+	getMediaItems: async function (
+		tmdbId?: number
+	): Promise<Array<RadarrMediaDetails>> {
+		const request: Dictionary = {
+			url: "/movie"
+		};
+		if (tmdbId) request.params = { tmdbId: tmdbId };
+		const data = await this.callApi(request);
+		this.debug(data);
+		return data;
 	},
 	/**
 	 * Get the details for a given media item.

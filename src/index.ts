@@ -1,6 +1,6 @@
 import PlexAPI from "./plex";
 import OverseerrAPI from "./overseerr";
-import TautulliAPI from "./tautulli";
+import TautulliAPI, { TautulliHistoryDetails } from "./tautulli";
 import RadarrAPI from "./radarr";
 import SonarrAPI from "./sonarr";
 import _ from "lodash";
@@ -9,14 +9,14 @@ import _ from "lodash";
 	// Feature flag for Tautulli integration. For dev. Default off.
 	if (process.env.FEATURE_TAUTULLI === "1") {
 		// TautulliAPI.arnold();
-		TautulliAPI.getHistory({ rating_key: 22075 });
+		TautulliAPI.getHistory({ user: "manybothans" });
 	}
 	// Feature flag for Radarr integration. For dev. Default off.
 	if (process.env.FEATURE_RADARR === "1") {
 		RadarrAPI.getHealth();
 		// RadarrAPI.getTags();
 		// RadarrAPI.createTag("newtag");
-		// const movie = await RadarrAPI.getMediaItem(128);
+		// const movie = await RadarrAPI.getMediaItems(316021);
 		// movie.tags.push(1);
 		// RadarrAPI.updateMediaItem(128, movie);
 		// RadarrAPI.addTagToMediaItem(128, "newtag");
@@ -131,6 +131,63 @@ import _ from "lodash";
 							);
 						}
 
+						// Now let's start looking at watch history and Radarr/Sonarr.
+						// Only continue if we have the right creds.
+						if (
+							process.env.RADARR_URL &&
+							process.env.RADARR_API_KEY &&
+							process.env.SONARR_URL &&
+							process.env.SONARR_API_KEY &&
+							process.env.TAUTULLI_URL &&
+							process.env.TAUTULLI_API_KEY
+						) {
+							// Get all sessions that this requester user has viewed this media item.
+							const watchHistories = await TautulliAPI.getHistory(
+								{
+									user: plexUsername,
+									rating_key: mediaId
+								}
+							);
+							// console.log(watchHistories);
+
+							// Filter history sessions to find if the media item was fully watched.
+							const watchedSession = _.find(
+								watchHistories,
+								(session: TautulliHistoryDetails) =>
+									session?.watched_status === 1
+							);
+							// console.log(watchedSession);
+
+							// We have evidence that the requester has fully watched the media item.
+							if (watchedSession) {
+								// Handle Radarr items.
+								if (sectionType == "movie") {
+									// Get the Radarr ID from the TMDB ID
+									const radarrItems =
+										await RadarrAPI.getMediaItems(
+											request?.media?.tmdbId
+										);
+
+									// Add the tag to the media item in Radarr indicating that the requester has watched the item.
+									if (radarrItems && _.first(radarrItems)) {
+										await RadarrAPI.addTagToMediaItem(
+											_.first(radarrItems).id,
+											"requester_watched"
+										);
+										await RadarrAPI.addTagToMediaItem(
+											_.first(radarrItems).id,
+											"requester:" + plexUsername
+										);
+									}
+								}
+								// Handle Sonarr items.
+								if (sectionType == "show") {
+									//
+								}
+							}
+						}
+
+						// Print to console, we're done this one.
 						console.log(
 							`${mediaItem.title} requested by ${plexUsername}`
 						);
@@ -139,6 +196,10 @@ import _ from "lodash";
 			} else {
 				console.log("Unsupported Media Type: " + sectionType);
 			}
+
+			console.log("Done Section.");
 		}
 	}
+
+	console.log("Done, Done, Done.");
 })();
