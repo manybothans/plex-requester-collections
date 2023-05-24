@@ -12,9 +12,7 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import _ from "lodash";
-import dotenv from "dotenv";
 import { error } from "console";
-dotenv.config();
 
 /**
  * @enum {number} Numeric codes for the different types of items in Plex. I found these using browser dev console, haven't found the others.

@@ -1,12 +1,14 @@
 {
 	"name": "plex-requester-collections",
-	"version": "1.0.0",
+	"version": "1.1.1",
 	"description": "Node app to automatically create Plex Collections for content requested by users in Overseerr.",
 	"main": "dist/index.js",
 	"scripts": {
 		"start": "tsc && node dist/index.js",
 		"lint": "eslint . --ext .ts",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dockerize": "tsc && docker build . -t manybothans/plex-requester-collections",
+		"docker-publish": "npm run dockerize && docker push manybothans/plex-requester-collections:latest"
 	},
 	"keywords": [
 		"plex",
@@ -28,6 +30,7 @@
 		"axios": "^1.4.0",
 		"dotenv": "^16.0.3",
 		"lodash": "^4.17.21",
-		"moment": "^2.29.4"
+		"moment": "^2.29.4",
+		"typescript": "^5.0.4"
 	}
 }

@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import PlexAPI from "./plex";
 import OverseerrAPI from "./overseerr";
 import TautulliAPI, { TautulliHistoryDetails } from "./tautulli";
@@ -19,7 +22,7 @@ import moment from "moment";
 		// Is the optional list of library sections to include set?
 		const includeSections: Array<string> = process.env.PLEX_INCLUDE_SECTIONS
 			? process.env.PLEX_INCLUDE_SECTIONS.split(",")
-			: [];
+			: undefined;
 
 		for (let i = 0; i < plexSections.length; i++) {
 			// ID of current library section.
@@ -27,8 +30,9 @@ import moment from "moment";
 
 			// Only do included sections if include list is set in .env
 			if (
-				includeSections.length &&
-				includeSections.indexOf(sectionId.toString()) >= 0
+				!includeSections ||
+				(includeSections.length &&
+					includeSections.indexOf(sectionId.toString()) >= 0)
 			) {
 				console.log("-----------------------------------------------");
 				console.log(`Starting Section: ${plexSections[i]?.title}`);

@@ -12,8 +12,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { error } from "console";
 import _ from "lodash";
-import dotenv from "dotenv";
-dotenv.config();
 
 /**
  * @typedef {Dictionary} Dictionary - Creates a new type for objects with unknown properties, e.g. responses from undocumented 3rd party APIs.
