@@ -9,7 +9,7 @@ import SonarrAPI from "./sonarr";
 import _ from "lodash";
 import moment from "moment";
 
-(async function app() {
+const app = async function () {
 	// Feature flag to turn off tagging media with requester and creating corresponding smart collections. For development. Default on.
 	if (process.env.FEATURE_REQUESTER_COLLECTIONS !== "0") {
 		// Get all the requests from Overseerr.
@@ -333,4 +333,8 @@ import moment from "moment";
 	}
 
 	console.log("Done, Done, Done.");
-})();
+};
+
+// Run every 24 h.
+setInterval(app, 86400000);
+app();

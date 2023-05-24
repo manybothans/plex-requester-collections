@@ -7,7 +7,6 @@ If you optionally provide Radarr, Sonarr, and Tautulli connection details in the
 #### To Do
 
 -   Get working with Plex Meta Manager.
--   Docker image.
 -   End goal is to have a Netflix-style recommendation algorithm for my users.
 
 #### Limitations
@@ -81,6 +80,8 @@ Run the Docker image with:
 ```bash
 docker compose -f /path/to/docker-compose.yml
 ```
+
+The process will go through once at start, then repeat every 24 hours.
 
 ## Contributing
 
