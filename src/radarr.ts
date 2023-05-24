@@ -219,6 +219,25 @@ const RadarrAPI = {
 		return result;
 	},
 	/**
+	 * Helper function to get a media item for a given TMDB ID.
+	 *
+	 * @param {number} tmdbId - The TMDB ID of the media item to search for.
+	 *
+	 * @return {Promise<RadarrMediaDetails>} Returns the details of the media item.
+	 */
+	getMediaItemForTMDBId: async function (
+		tmdbId: number
+	): Promise<RadarrMediaDetails> {
+		// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
+		const items = await this.getMediaItems(tmdbId);
+		const item: RadarrMediaDetails = _.find(
+			items,
+			(el) => el?.tmdbId === tmdbId
+		);
+		this.debug(item);
+		return item;
+	},
+	/**
 	 * Get all the media items, or get a single media item matching a TMBD ID.
 	 *
 	 * @remark

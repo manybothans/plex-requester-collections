@@ -11,7 +11,7 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { error } from "console";
-// import _ from "lodash";
+import _ from "lodash";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -134,6 +134,68 @@ const SonarrAPI = {
 		return data;
 	},
 	/**
+	 * Helper function to add a tag to a media item.
+	 *
+	 * @remark
+	 * This results in 3 different API calls.
+	 *
+	 * @param {number} itemId - The ID of the media item you want.
+	 * @param {string} tag - The string label of the tag you want to add.
+	 *
+	 * @return {Promise<SonarrSeriesDetails>} The details of the updated media item.
+	 */
+	addTagToMediaItem: async function (
+		itemId: number,
+		tag: string
+	): Promise<SonarrSeriesDetails> {
+		const tagDetails = await SonarrAPI.createTag(tag);
+		const movieDetails = await SonarrAPI.getMediaItem(itemId);
+		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
+		const result = SonarrAPI.updateMediaItem(itemId, movieDetails);
+		this.debug(result);
+		return result;
+	},
+	/**
+	 * Helper function to get a media item for a given TVDB ID.
+	 *
+	 * @param {number} tvdbId - The TVDB ID of the media item to search for.
+	 *
+	 * @return {Promise<SonarrSeriesDetails>} Returns the details of the media item.
+	 */
+	getMediaItemForTVDBId: async function (
+		tvdbId: number
+	): Promise<SonarrSeriesDetails> {
+		// Get the Radarr item from the TVDB ID, so we can use the Radarr ID.
+		const items = await this.getMediaItems(tvdbId);
+		const item: SonarrSeriesDetails = _.find(
+			items,
+			(el) => el?.tvdbId === tvdbId
+		);
+		this.debug(item);
+		return item;
+	},
+	/**
+	 * Get all the media items, or get a single media item matching a TVDB ID.
+	 *
+	 * @remark
+	 * This is useful to translate a TVDB ID from Overseerr or Plex to a Sonarr ID, which is needed for updating a media item.
+	 *
+	 * @param {number} tvtbId - (Optional) The TVDB ID of the media item to search for.
+	 *
+	 * @return {Promise<Array<SonarrSeriesDetails>>} Returns the details of the media item.
+	 */
+	getMediaItems: async function (
+		tvtbId?: number
+	): Promise<Array<SonarrSeriesDetails>> {
+		const request: Dictionary = {
+			url: "/series"
+		};
+		if (tvtbId) request.params = { tvtbId: tvtbId };
+		const data = await this.callApi(request);
+		this.debug(data);
+		return data;
+	},
+	/**
 	 * Get the details for a given media item.
 	 *
 	 * @param {number} itemId - The ID of the media item you want.
@@ -145,6 +207,29 @@ const SonarrAPI = {
 	): Promise<SonarrSeriesDetails> {
 		const data = await this.callApi({
 			url: "/series/" + itemId
+		});
+		this.debug(data);
+		return data;
+	},
+	/**
+	 * Update the details of a media item on the server.
+	 *
+	 * @param {number} itemId - The ID of the media item you want to update.
+	 * @param {SonarrSeriesDetails} options - The details you want to update on the media item. Must actually contain the whole series object apparently.
+	 *
+	 * @return {Promise<SonarrSeriesDetails>} Returns the details of the media item.
+	 */
+	updateMediaItem: async function (
+		itemId: number,
+		options: SonarrSeriesDetails
+	): Promise<SonarrSeriesDetails> {
+		const data = await this.callApi({
+			url: "/series/" + itemId,
+			method: "put",
+			params: {
+				moveFiles: false
+			},
+			data: options
 		});
 		this.debug(data);
 		return data;

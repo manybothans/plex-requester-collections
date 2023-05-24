@@ -22,9 +22,6 @@ dotenv.config();
 interface Dictionary {
 	[key: string]: unknown;
 }
-interface DictionaryObj {
-	[key: string]: Dictionary;
-}
 
 /**
  * @typedef {Object} OverseerrPaginationOptions - Creates a new Type for the Plex collection creation options.

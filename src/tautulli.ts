@@ -191,8 +191,12 @@ const TautulliAPI = {
 	getHistory: async function (
 		searchOptions: TautulliHistoryRequestOptions
 	): Promise<Array<TautulliHistoryDetails>> {
+		// Default sort to Date Descending
+		searchOptions.order_column = searchOptions.order_column || "date";
+		searchOptions.order_dir = searchOptions.order_dir || "desc";
 		// Re-type to Dictionary in order to include cmd field, which we don't want to be able to set externally.
 		const params: Dictionary = <Dictionary>searchOptions || <Dictionary>{};
+		params.order;
 		params.cmd = "get_history";
 
 		const data = await this.callApi({
