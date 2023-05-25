@@ -21,91 +21,84 @@ const STALE_ADDEDDATE_THRESHOLD = moment().subtract(6, "months");
 const STALE_VIEWDATE_THRESHOLD = moment().subtract(3, "months");
 
 const app = async function () {
-	// Feature flag to turn off tagging media with requester and creating corresponding smart collections. For development. Default on.
-	if (process.env.FEATURE_REQUESTER_COLLECTIONS !== "0") {
-		// Get all the requests from Overseerr.
-		const requests = await OverseerrAPI.getAllRequests();
+	// Get all the requests from Overseerr.
+	const requests = await OverseerrAPI.getAllRequests();
 
-		// Get the Plex library sections. It's not easy to get the section ID for a given media item,
-		// so it's easier to start with the sections and work down.
-		const plexSections = await PlexAPI.getSections();
+	// Get the Plex library sections. It's not easy to get the section ID for a given media item,
+	// so it's easier to start with the sections and work down.
+	const plexSections = await PlexAPI.getSections();
 
-		// Is the optional list of library sections to include set in .env?
-		const includeSections: Array<string> = process.env.PLEX_INCLUDE_SECTIONS
-			? process.env.PLEX_INCLUDE_SECTIONS.split(",")
-			: undefined;
+	// Is the optional list of library sections to include set in .env?
+	const includeSections: Array<string> = process.env.PLEX_INCLUDE_SECTIONS
+		? process.env.PLEX_INCLUDE_SECTIONS.split(",")
+		: undefined;
 
-		// Only do included sections if include list is set in .env
-		_.remove(plexSections, (value) => {
-			return (
-				includeSections &&
-				includeSections.indexOf(<string>value.key) === -1
+	// Only do included sections if include list is set in .env
+	_.remove(plexSections, (value) => {
+		return (
+			includeSections && includeSections.indexOf(<string>value.key) === -1
+		);
+	});
+
+	for (let i = 0; i < plexSections.length; i++) {
+		// ID of current library section.
+		const sectionId = parseInt(<string>plexSections[i]?.key);
+
+		console.log("-----------------------------------------------");
+		console.log(`Starting Section: ${plexSections[i]?.title}`);
+		console.log("-----------------------------------------------");
+
+		// Media type of current section (e.g. TV vs Movie)
+		const sectionType = <string>plexSections[i]?.type;
+
+		// We only support Movies and TV Shows for now.
+		if (sectionType !== "movie" && sectionType !== "show") {
+			console.log("Unsupported Media Type: " + sectionType);
+			continue;
+		}
+
+		// Get all the media items and existing collections for this library section.
+		const mediaItems = await PlexAPI.getAllItems(sectionId);
+		let collections = await PlexAPI.getCollections(sectionId);
+
+		// Reset cached Plex labels since we're starting a new section.
+		await PlexAPI.getLabels(sectionId);
+
+		// Cycle through each media item in the library section, tag it with the requester.
+		for (let j = 0; j < mediaItems.length; j++) {
+			const start = Date.now();
+
+			const mediaItem = mediaItems[j];
+
+			// Does a requester entry exist for this media item?
+			const request = _.find(
+				requests,
+				(item) => item?.media?.ratingKey === mediaItem?.ratingKey
 			);
-		});
 
-		for (let i = 0; i < plexSections.length; i++) {
-			// ID of current library section.
-			const sectionId = parseInt(<string>plexSections[i]?.key);
-
-			console.log("-----------------------------------------------");
-			console.log(`Starting Section: ${plexSections[i]?.title}`);
-			console.log("-----------------------------------------------");
-
-			// Media type of current section (e.g. TV vs Movie)
-			const sectionType = <string>plexSections[i]?.type;
-
-			// We only support Movies and TV Shows for now.
-			if (sectionType !== "movie" && sectionType !== "show") {
-				console.log("Unsupported Media Type: " + sectionType);
+			// No request object found for this media item, jump to next loop pass.
+			if (!request) {
 				continue;
 			}
 
-			console.log("Initializing...");
+			// Init some values we're going to need.
+			const mediaId = parseInt(<string>mediaItem.ratingKey);
+			const plexUsername = request?.requestedBy?.plexUsername;
 
-			// Get all the media items, existing collections, and watch histories for this library section.
-			const mediaItems = await PlexAPI.getAllItems(sectionId);
-			let collections = await PlexAPI.getCollections(sectionId);
-			const histories = await TautulliAPI.getAllHistory({
-				section_id: sectionId,
-				order_column: "date",
-				order_dir: "desc"
-			});
-			// Reset cached Plex labels since we're starting a new section.
-			await PlexAPI.getLabels(sectionId);
+			// Print to console.
+			console.log(`${mediaItem.title} requested by ${plexUsername}`);
 
-			// Cycle through each media item in the library section, tag it with the requester.
-			for (let j = 0; j < mediaItems.length; j++) {
-				const start = Date.now();
+			// Tag the media item.
+			const requesterTagValue = TAG_PREFEX_REQUESTER + plexUsername;
+			await PlexAPI.addLabelToItem(
+				sectionId,
+				PlexAPI.getPlexTypeCode(sectionType),
+				mediaId,
+				requesterTagValue
+			);
 
-				const mediaItem = mediaItems[j];
-
-				// Does a requester entry exist for this media item?
-				const request = _.find(
-					requests,
-					(item) => item?.media?.ratingKey === mediaItem?.ratingKey
-				);
-
-				// No request object found for this media item, jump to next loop pass.
-				if (!request) {
-					continue;
-				}
-
-				// Init some values we're going to need.
-				const mediaId = parseInt(<string>mediaItem.ratingKey);
-				const plexUsername = request?.requestedBy?.plexUsername;
-
-				// Print to console.
-				console.log(`${mediaItem.title} requested by ${plexUsername}`);
-
-				// Tag the media item.
-				const requesterTagValue = TAG_PREFEX_REQUESTER + plexUsername;
-				await PlexAPI.addLabelToItem(
-					sectionId,
-					PlexAPI.getPlexTypeCode(sectionType),
-					mediaId,
-					requesterTagValue
-				);
-
+			// Feature flag to turn off the creation of smart collections.
+			if (process.env.FEATURE_CREATE_COLLECTIONS !== "0") {
 				// This is what the smart collection should be called.
 				const collectionTitle =
 					sectionType == "movie"
@@ -154,175 +147,191 @@ const app = async function () {
 					// Print to console.
 					console.log(" -> Smart Collection created");
 				}
+			}
 
-				// Now let's start looking at watch history and Radarr/Sonarr.
-				// Only continue if we have the right creds.
+			// Now let's start looking at watch history and Radarr/Sonarr.
+			// Only continue if we have the right creds.
 
-				// Handle Radarr items.
-				if (
-					sectionType == "movie" &&
-					process.env.TAUTULLI_URL &&
-					process.env.TAUTULLI_API_KEY &&
-					process.env.RADARR_URL &&
-					process.env.RADARR_API_KEY
-				) {
-					// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
-					let radarrItem = await RadarrAPI.getMediaItemForTMDBId(
-						request?.media?.tmdbId
-					);
+			// Handle Radarr items.
+			if (
+				sectionType == "movie" &&
+				process.env.TAUTULLI_URL &&
+				process.env.TAUTULLI_API_KEY &&
+				process.env.RADARR_URL &&
+				process.env.RADARR_API_KEY
+			) {
+				// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
+				let radarrItem = await RadarrAPI.getMediaItemForTMDBId(
+					request?.media?.tmdbId
+				);
 
-					// Does the item exist in Radarr? If not, jump to next loop pass.
-					if (!radarrItem) {
-						continue;
-					}
+				// Does the item exist in Radarr? If not, jump to next loop pass.
+				if (!radarrItem) {
+					continue;
+				}
 
-					// Tag the item with the requester username.
+				// Tag the item with the requester username.
+				radarrItem = await RadarrAPI.addTagToMediaItem(
+					radarrItem.id,
+					requesterTagValue,
+					radarrItem
+				);
+
+				// Get all the history sessions for this media item.
+				const histories = await TautulliAPI.getAllHistory({
+					section_id: sectionId,
+					rating_key: mediaId,
+					order_column: "date",
+					order_dir: "desc"
+				});
+
+				// Filter history sessions to find if the media item was fully watched by the requester.
+				const filteredHistories = _.filter(
+					histories,
+					(session: TautulliHistoryDetails) =>
+						session?.user === plexUsername &&
+						session?.rating_key === mediaId
+				);
+				const watchedSession = _.find(
+					filteredHistories,
+					(session: TautulliHistoryDetails) =>
+						session?.watched_status === 1
+				);
+
+				// We have evidence that the requester has fully watched the media item.
+				if (watchedSession) {
+					// Add the tag to the media item in Radarr indicating that the requester has watched the item.
 					radarrItem = await RadarrAPI.addTagToMediaItem(
 						radarrItem.id,
-						requesterTagValue,
+						TAG_REQUESTER_WATCHED,
 						radarrItem
 					);
 
-					// Filter history sessions to find if the media item was fully watched by the requester.
-					const filteredHistories = _.filter(
-						histories,
-						(session: TautulliHistoryDetails) =>
-							session?.user === plexUsername &&
-							session?.rating_key === mediaId
-					);
-					const watchedSession = _.find(
-						filteredHistories,
-						(session: TautulliHistoryDetails) =>
-							session?.watched_status === 1
-					);
+					// Print to console.
+					console.log(" -> Watched by requester");
+				}
+				// If they haven't finished watching it, is it a stale request?
+				else {
+					const lastWatchedDate =
+						filteredHistories && filteredHistories.length
+							? filteredHistories[0].date
+							: 0;
 
-					// We have evidence that the requester has fully watched the media item.
-					if (watchedSession) {
-						// Add the tag to the media item in Radarr indicating that the requester has watched the item.
+					// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
+					if (
+						moment(request.media?.mediaAddedAt) <
+							STALE_ADDEDDATE_THRESHOLD &&
+						moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
+					) {
 						radarrItem = await RadarrAPI.addTagToMediaItem(
 							radarrItem.id,
-							TAG_REQUESTER_WATCHED,
+							TAG_STALE_REQUEST,
 							radarrItem
 						);
 
 						// Print to console.
-						console.log(" -> Watched by requester");
-					}
-					// If they haven't finished watching it, is it a stale request?
-					else {
-						const lastWatchedDate =
-							filteredHistories && filteredHistories.length
-								? filteredHistories[0].date
-								: 0;
-
-						// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
-						if (
-							moment(request.media?.mediaAddedAt) <
-								STALE_ADDEDDATE_THRESHOLD &&
-							moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
-						) {
-							radarrItem = await RadarrAPI.addTagToMediaItem(
-								radarrItem.id,
-								TAG_STALE_REQUEST,
-								radarrItem
-							);
-
-							// Print to console.
-							console.log(" -> Stale request");
-						}
+						console.log(" -> Stale request");
 					}
 				}
-				// Handle Sonarr items.
+			}
+			// Handle Sonarr items.
+			if (
+				sectionType == "show" &&
+				process.env.TAUTULLI_URL &&
+				process.env.TAUTULLI_API_KEY &&
+				process.env.SONARR_URL &&
+				process.env.SONARR_API_KEY
+			) {
+				// Find the media item in Sonarr.
+				let sonarrItem = await SonarrAPI.getMediaItemForTVDBId(
+					request?.media?.tvdbId
+				);
+
+				// Does the item exist in Sonarr? If not, jump to next loop pass.
+				if (!sonarrItem) {
+					continue;
+				}
+
+				// Tag the item with the requester username.
+				sonarrItem = await SonarrAPI.addTagToMediaItem(
+					sonarrItem.id,
+					requesterTagValue,
+					sonarrItem
+				);
+
+				// Get all the history sessions for this media item.
+				const histories = await TautulliAPI.getAllHistory({
+					section_id: sectionId,
+					grandparent_rating_key: mediaId,
+					order_column: "date",
+					order_dir: "desc"
+				});
+
+				// Filter history sessions to find if the media item was fully watched by the requester.
+				const filteredHistories = _.filter(
+					histories,
+					(session: TautulliHistoryDetails) =>
+						session?.user === plexUsername &&
+						session?.grandparent_rating_key === mediaId
+				);
+
+				// Filter the history sessions by "fully watched"
+				const watchedHistories = _.filter(filteredHistories, {
+					watched_status: 1
+				});
+
+				// Make a list of unique episodes that have been fully watched.
+				const uniqueEpisodeHistories = _.uniqBy(
+					watchedHistories,
+					"rating_key"
+				);
+
+				// Has the user watched all the epsiodes, and have all the current episodes been downloaded?
 				if (
-					sectionType == "show" &&
-					process.env.TAUTULLI_URL &&
-					process.env.TAUTULLI_API_KEY &&
-					process.env.SONARR_URL &&
-					process.env.SONARR_API_KEY
+					uniqueEpisodeHistories?.length ===
+						sonarrItem?.statistics?.episodeCount &&
+					sonarrItem?.statistics?.percentOfEpisodes === 100
 				) {
-					// Find the media item in Sonarr.
-					let sonarrItem = await SonarrAPI.getMediaItemForTVDBId(
-						request?.media?.tvdbId
-					);
-
-					// Does the item exist in Sonarr? If not, jump to next loop pass.
-					if (!sonarrItem) {
-						continue;
-					}
-
-					// Tag the item with the requester username.
+					// Tag the media item.
 					sonarrItem = await SonarrAPI.addTagToMediaItem(
 						sonarrItem.id,
-						requesterTagValue,
+						TAG_REQUESTER_WATCHED,
 						sonarrItem
 					);
 
-					// Filter history sessions to find if the media item was fully watched by the requester.
-					const filteredHistories = _.filter(
-						histories,
-						(session: TautulliHistoryDetails) =>
-							session?.user === plexUsername &&
-							session?.grandparent_rating_key === mediaId
-					);
+					// Print to console.
+					console.log(" -> Watched by requester");
+				}
+				// If they haven't finished watching it, is it a stale request?
+				else {
+					const lastWatchedDate =
+						filteredHistories && filteredHistories.length
+							? filteredHistories[0].date
+							: 0;
 
-					// Filter the history sessions by "fully watched"
-					const watchedHistories = _.filter(filteredHistories, {
-						watched_status: 1
-					});
-
-					// Make a list of unique episodes that have been fully watched.
-					const uniqueEpisodeHistories = _.uniqBy(
-						watchedHistories,
-						"rating_key"
-					);
-
-					// Has the user watched all the epsiodes, and have all the current episodes been downloaded?
+					// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
 					if (
-						uniqueEpisodeHistories?.length ===
-							sonarrItem?.statistics?.episodeCount &&
-						sonarrItem?.statistics?.percentOfEpisodes === 100
+						moment(request.media?.mediaAddedAt) <
+							STALE_ADDEDDATE_THRESHOLD &&
+						moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
 					) {
-						// Tag the media item.
 						sonarrItem = await SonarrAPI.addTagToMediaItem(
 							sonarrItem.id,
-							TAG_REQUESTER_WATCHED,
+							TAG_STALE_REQUEST,
 							sonarrItem
 						);
 
 						// Print to console.
-						console.log(" -> Watched by requester");
-					}
-					// If they haven't finished watching it, is it a stale request?
-					else {
-						const lastWatchedDate =
-							filteredHistories && filteredHistories.length
-								? filteredHistories[0].date
-								: 0;
-
-						// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
-						if (
-							moment(request.media?.mediaAddedAt) <
-								STALE_ADDEDDATE_THRESHOLD &&
-							moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
-						) {
-							sonarrItem = await SonarrAPI.addTagToMediaItem(
-								sonarrItem.id,
-								TAG_STALE_REQUEST,
-								sonarrItem
-							);
-
-							// Print to console.
-							console.log(" -> Stale request");
-						}
+						console.log(" -> Stale request");
 					}
 				}
-
-				const end = Date.now();
-				debugPerformance(` -> Completed in: ${end - start} ms`);
 			}
 
-			console.log("Done Section.");
+			const end = Date.now();
+			debugPerformance(` -> Completed in: ${end - start} ms`);
 		}
+
+		console.log("Done Section.");
 	}
 
 	console.log("Done, Done, Done.");

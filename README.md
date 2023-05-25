@@ -48,6 +48,7 @@ SONARR_API_KEY=******************** # Optional
 TAUTULLI_URL=http://tautulli-ip-address:8181 # Optional
 TAUTULLI_API_KEY=******************** # Optional
 FEATURE_RUN_ONCE=0 # Optional - 1:Run through once then stop. 0 (default): Repeat every 24h.
+FEATURE_CREATE_COLLECTIONS=1 # Optional - 1 (default): Make smart collection for each requester. 0: Just do the tagging.
 ```
 
 Build and run with:
@@ -80,6 +81,7 @@ services:
       - TAUTULLI_URL=http://tautulli-ip-address:8181 # Optional
       - TAUTULLI_API_KEY=******************** # Optional
       - FEATURE_RUN_ONCE=0 # Optional - 1:Run through once then stop. 0 (default): Repeat every 24h.
+      - FEATURE_CREATE_COLLECTIONS=1 # Optional - 1 (default): Make smart collection for each requester. 0: Just do the tagging.
     restart: unless-stopped
 ```
 
