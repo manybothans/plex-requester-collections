@@ -4,18 +4,15 @@
 	"editor.indentSize": "tabSize",
 	"[yaml]": {
 		"editor.formatOnSave": false,
-		"editor.tabSize": 2,
-		"prettier.tabWidth": 2
+		"editor.tabSize": 2
 	},
 	"[markdown]": {
 		"editor.formatOnSave": false,
-		"editor.tabSize": 2,
-		"prettier.tabWidth": 2
+		"editor.tabSize": 2
 	},
 	"[dockercompose]": {
 		"editor.formatOnSave": false,
-		"editor.tabSize": 2,
-		"prettier.tabWidth": 2
+		"editor.tabSize": 2
 	},
 	"search.exclude": {
 		"**/node_modules": true

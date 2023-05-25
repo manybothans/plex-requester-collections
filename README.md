@@ -4,10 +4,15 @@ This app automatically creates Collections in Plex Media Server for the content 
 
 If you optionally provide Radarr, Sonarr, and Tautulli connection details in the `.env` file, then the app will also tag items in Radarr/Sonarr with the requester Plex username in the format `requester:plex_username`. If Tautulli shows that the requester has fully watched the item, it will also tag the item in Radarr/Sonarr with `requester_watched` (useful for library pruning). If Overseerr shows that the media item was available over 6 months ago, and Tautulli shows that the requester last watched the item over 3 months ago and didn't finish, then the tag `stale_request` will be added to the item in Radarr/Sonarr.
 
+The process will go through once at start, then repeat every 24 hours. Make sure the services you're connecting to are already running. ;)
+
 #### To Do
 
 -   Get working with Plex Meta Manager.
 -   End goal is to have a Netflix-style recommendation algorithm for my users.
+-   Add support for users who modify requests, or who haven't requested by are actively watching the content.
+-   Add support for removing tags if state changes.
+-   Figure out how to have personalized Plex homescreens, different by user.
 
 #### Limitations
 
@@ -37,7 +42,7 @@ PLEX_TOKEN=********************
 PLEX_INCLUDE_SECTIONS=1,2 # Optional - Comma-Separated, only process these library sections.
 RADARR_URL=http://radarr-ip-address:7878 # Optional
 RADARR_API_KEY=******************** # Optional
-SONARR_URL=http://sonarr-ip-address:7878 # Optional
+SONARR_URL=http://sonarr-ip-address:8989 # Optional
 SONARR_API_KEY=******************** # Optional
 TAUTULLI_URL=http://tautulli-ip-address:8181 # Optional
 TAUTULLI_API_KEY=******************** # Optional
@@ -68,7 +73,7 @@ services:
       - PLEX_INCLUDE_SECTIONS=1,2 # Optional - Comma-Separated, only process these library sections.
       - RADARR_URL=http://radarr-ip-address:7878 # Optional
       - RADARR_API_KEY=******************** # Optional
-      - SONARR_URL=http://sonarr-ip-address:7878 # Optional
+      - SONARR_URL=http://sonarr-ip-address:8989 # Optional
       - SONARR_API_KEY=******************** # Optional
       - TAUTULLI_URL=http://tautulli-ip-address:8181 # Optional
       - TAUTULLI_API_KEY=******************** # Optional
@@ -80,8 +85,6 @@ Run the Docker image with:
 ```bash
 docker-compose up -d -f /path/to/docker-compose.yml
 ```
-
-The process will go through once at start, then repeat every 24 hours.
 
 ## Contributing
 
