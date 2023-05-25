@@ -157,6 +157,10 @@ interface RadarrMediaDetails {
  */
 const RadarrAPI = {
 	/**
+	 * @property {Array<RadarrTag} Tags - Cached list of all tags in Radarr.
+	 */
+	Tags: undefined,
+	/**
 	 * Get the health of Radarr server.
 	 *
 	 * @return {Promise<Array<Dictionary>>} Returns the health status of the Radarr server instance.
@@ -172,27 +176,40 @@ const RadarrAPI = {
 	 * @return {Promise<Array<RadarrTag>>} Returns the list of tags from the server.
 	 */
 	getTags: async function (): Promise<Array<RadarrTag>> {
-		const data = await this.callApi({ url: "/tag" });
-		this.debug(data);
-		return data;
+		this.Tags = await this.callApi({ url: "/tag" });
+		if (!_.isArray(this.Tags)) {
+			this.Tags = undefined;
+		}
+		this.debug(this.Tags);
+		return this.Tags;
 	},
 	/**
 	 * Create a new tag.
+	 *
+	 * @remark
+	 * In order to reduce calls, If a matching tag exists already, just return it.
 	 *
 	 * @param {string} tag - The string label for the new tag to create.
 	 *
 	 * @return {Promise<RadarrTag>} Returns the label and ID of the new tag.
 	 */
 	createTag: async function (tag: string): Promise<RadarrTag> {
-		const data = await this.callApi({
-			url: "/tag",
-			method: "post",
-			data: {
-				label: tag
-			}
-		});
-		this.debug(data);
-		return data;
+		if (!this.Tags) {
+			await this.getTags();
+		}
+		let tagObj = _.find(this.Tags, (val: RadarrTag) => val.label === tag);
+		if (!tagObj) {
+			tagObj = await this.callApi({
+				url: "/tag",
+				method: "post",
+				data: {
+					label: tag
+				}
+			});
+			await this.getTags();
+		}
+		this.debug(tagObj);
+		return tagObj;
 	},
 	/**
 	 * Helper function to add a tag to a media item.
@@ -207,10 +224,13 @@ const RadarrAPI = {
 	 */
 	addTagToMediaItem: async function (
 		itemId: number,
-		tag: string
+		tag: string,
+		mediaObject?: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
 		const tagDetails = await RadarrAPI.createTag(tag);
-		const movieDetails = await RadarrAPI.getMediaItem(itemId);
+		const movieDetails = mediaObject
+			? mediaObject
+			: await RadarrAPI.getMediaItem(itemId);
 		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
 		const result = RadarrAPI.updateMediaItem(itemId, movieDetails);
 		this.debug(result);
@@ -317,7 +337,15 @@ const RadarrAPI = {
 			};
 			requestObj.method = requestObj.method || "get";
 
+			const start = Date.now();
+
 			const response: AxiosResponse = await axios.request(requestObj);
+
+			const end = Date.now();
+			this.debugPerformance(
+				`Radarr Call Time: ${requestObj.url}: ${end - start} ms`
+			);
+
 			// this.debug(response);
 			return response?.data;
 		} catch (error) {
@@ -334,6 +362,21 @@ const RadarrAPI = {
 	 */
 	debug: function (data: unknown) {
 		if (process.env.NODE_ENV == "development") {
+			console.log(data);
+		}
+	},
+	/**
+	 * Debugger helper function. Only prints to console if NODE_ENV in .env file is set to "benchmark2".
+	 *
+	 * @remark
+	 * This is for displaying execution time of individual API calls.
+	 *
+	 * @param {unknown} data - Anything you want to print to console.
+	 *
+	 * @return None.
+	 */
+	debugPerformance: function (data: unknown) {
+		if (process.env.NODE_ENV == "benchmark2") {
 			console.log(data);
 		}
 	}

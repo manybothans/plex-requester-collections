@@ -60,12 +60,23 @@ const app = async function () {
 				continue;
 			}
 
-			// Get all the media items and existing collections for this library section.
+			console.log("Initializing...");
+
+			// Get all the media items, existing collections, and watch histories for this library section.
 			const mediaItems = await PlexAPI.getAllItems(sectionId);
 			let collections = await PlexAPI.getCollections(sectionId);
+			const histories = await TautulliAPI.getAllHistory({
+				section_id: sectionId,
+				order_column: "date",
+				order_dir: "desc"
+			});
+			// Reset cached Plex labels since we're starting a new section.
+			await PlexAPI.getLabels(sectionId);
 
 			// Cycle through each media item in the library section, tag it with the requester.
 			for (let j = 0; j < mediaItems.length; j++) {
+				const start = Date.now();
+
 				const mediaItem = mediaItems[j];
 
 				// Does a requester entry exist for this media item?
@@ -156,7 +167,7 @@ const app = async function () {
 					process.env.RADARR_API_KEY
 				) {
 					// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
-					const radarrItem = await RadarrAPI.getMediaItemForTMDBId(
+					let radarrItem = await RadarrAPI.getMediaItemForTMDBId(
 						request?.media?.tmdbId
 					);
 
@@ -166,20 +177,21 @@ const app = async function () {
 					}
 
 					// Tag the item with the requester username.
-					await RadarrAPI.addTagToMediaItem(
+					radarrItem = await RadarrAPI.addTagToMediaItem(
 						radarrItem.id,
-						requesterTagValue
+						requesterTagValue,
+						radarrItem
 					);
 
-					// Get all sessions that this requester user has viewed this media item.
-					const watchHistories = await TautulliAPI.getHistory({
-						user: plexUsername,
-						rating_key: mediaId
-					});
-
-					// Filter history sessions to find if the media item was fully watched.
+					// Filter history sessions to find if the media item was fully watched by the requester.
+					const filteredHistories = _.filter(
+						histories,
+						(session: TautulliHistoryDetails) =>
+							session?.user === plexUsername &&
+							session?.rating_key === mediaId
+					);
 					const watchedSession = _.find(
-						watchHistories,
+						filteredHistories,
 						(session: TautulliHistoryDetails) =>
 							session?.watched_status === 1
 					);
@@ -187,9 +199,10 @@ const app = async function () {
 					// We have evidence that the requester has fully watched the media item.
 					if (watchedSession) {
 						// Add the tag to the media item in Radarr indicating that the requester has watched the item.
-						await RadarrAPI.addTagToMediaItem(
+						radarrItem = await RadarrAPI.addTagToMediaItem(
 							radarrItem.id,
-							TAG_REQUESTER_WATCHED
+							TAG_REQUESTER_WATCHED,
+							radarrItem
 						);
 
 						// Print to console.
@@ -198,8 +211,8 @@ const app = async function () {
 					// If they haven't finished watching it, is it a stale request?
 					else {
 						const lastWatchedDate =
-							watchHistories && watchHistories.length
-								? watchHistories[0].date
+							filteredHistories && filteredHistories.length
+								? filteredHistories[0].date
 								: 0;
 
 						// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
@@ -208,9 +221,10 @@ const app = async function () {
 								STALE_ADDEDDATE_THRESHOLD &&
 							moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
 						) {
-							await RadarrAPI.addTagToMediaItem(
+							radarrItem = await RadarrAPI.addTagToMediaItem(
 								radarrItem.id,
-								TAG_STALE_REQUEST
+								TAG_STALE_REQUEST,
+								radarrItem
 							);
 
 							// Print to console.
@@ -227,7 +241,7 @@ const app = async function () {
 					process.env.SONARR_API_KEY
 				) {
 					// Find the media item in Sonarr.
-					const sonarrItem = await SonarrAPI.getMediaItemForTVDBId(
+					let sonarrItem = await SonarrAPI.getMediaItemForTVDBId(
 						request?.media?.tvdbId
 					);
 
@@ -237,25 +251,28 @@ const app = async function () {
 					}
 
 					// Tag the item with the requester username.
-					await SonarrAPI.addTagToMediaItem(
+					sonarrItem = await SonarrAPI.addTagToMediaItem(
 						sonarrItem.id,
-						requesterTagValue
+						requesterTagValue,
+						sonarrItem
 					);
 
-					// Get all sessions that this requester user has viewed this media item.
-					const watchHistories = await TautulliAPI.getHistory({
-						user: plexUsername,
-						grandparent_rating_key: mediaId
-					});
+					// Filter history sessions to find if the media item was fully watched by the requester.
+					const filteredHistories = _.filter(
+						histories,
+						(session: TautulliHistoryDetails) =>
+							session?.user === plexUsername &&
+							session?.grandparent_rating_key === mediaId
+					);
 
 					// Filter the history sessions by "fully watched"
-					const filteredHistories = _.filter(watchHistories, {
+					const watchedHistories = _.filter(filteredHistories, {
 						watched_status: 1
 					});
 
 					// Make a list of unique episodes that have been fully watched.
 					const uniqueEpisodeHistories = _.uniqBy(
-						filteredHistories,
+						watchedHistories,
 						"rating_key"
 					);
 
@@ -266,9 +283,10 @@ const app = async function () {
 						sonarrItem?.statistics?.percentOfEpisodes === 100
 					) {
 						// Tag the media item.
-						await SonarrAPI.addTagToMediaItem(
+						sonarrItem = await SonarrAPI.addTagToMediaItem(
 							sonarrItem.id,
-							TAG_REQUESTER_WATCHED
+							TAG_REQUESTER_WATCHED,
+							sonarrItem
 						);
 
 						// Print to console.
@@ -277,8 +295,8 @@ const app = async function () {
 					// If they haven't finished watching it, is it a stale request?
 					else {
 						const lastWatchedDate =
-							watchHistories && watchHistories.length
-								? watchHistories[0].date
+							filteredHistories && filteredHistories.length
+								? filteredHistories[0].date
 								: 0;
 
 						// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
@@ -287,9 +305,10 @@ const app = async function () {
 								STALE_ADDEDDATE_THRESHOLD &&
 							moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
 						) {
-							await SonarrAPI.addTagToMediaItem(
+							sonarrItem = await SonarrAPI.addTagToMediaItem(
 								sonarrItem.id,
-								TAG_STALE_REQUEST
+								TAG_STALE_REQUEST,
+								sonarrItem
 							);
 
 							// Print to console.
@@ -297,6 +316,9 @@ const app = async function () {
 						}
 					}
 				}
+
+				const end = Date.now();
+				debugPerformance(` -> Completed in: ${end - start} ms`);
 			}
 
 			console.log("Done Section.");
@@ -312,3 +334,10 @@ if (process.env.FEATURE_RUN_ONCE !== "1") {
 	setInterval(app, 86400000);
 }
 app();
+
+// For displaying execution time of each media item.
+const debugPerformance = function (data: unknown) {
+	if (process.env.NODE_ENV == "benchmark1") {
+		console.log(data);
+	}
+};

@@ -243,7 +243,15 @@ const OverseerrAPI = {
 			};
 			requestObj.method = requestObj.method || "get";
 
+			const start = Date.now();
+
 			const response: AxiosResponse = await axios.request(requestObj);
+
+			const end = Date.now();
+			this.debugPerformance(
+				`Overseerr Call Time: ${requestObj.url}: ${end - start} ms`
+			);
+
 			// this.debug(response);
 			return response.data;
 		} catch (error) {
@@ -260,6 +268,21 @@ const OverseerrAPI = {
 	 */
 	debug: function (data: unknown) {
 		if (process.env.NODE_ENV == "development") {
+			console.log(data);
+		}
+	},
+	/**
+	 * Debugger helper function. Only prints to console if NODE_ENV in .env file is set to "benchmark2".
+	 *
+	 * @remark
+	 * This is for displaying execution time of individual API calls.
+	 *
+	 * @param {unknown} data - Anything you want to print to console.
+	 *
+	 * @return None.
+	 */
+	debugPerformance: function (data: unknown) {
+		if (process.env.NODE_ENV == "benchmark2") {
 			console.log(data);
 		}
 	}

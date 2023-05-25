@@ -8,6 +8,7 @@
  */
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import _ from "lodash";
 import { error } from "console";
 
 /**
@@ -86,9 +87,9 @@ interface TautulliHistoryRequestOptions {
  * @property {number} secure -
  * @property {number} relayed -
  * @property {string} media_type -
- * @property {number} rating_key - ID of the media item that was watched. (e.g. Movie or Episode)
- * @property {string} parent_rating_key - ID of the parent of the media item that was watched (e.g. Season if it was a show)
- * @property {string} grandparent_rating_key - ID of the grandparent of the media item that was watched (e.g. Series if it was a show)
+ * @property {number | string} rating_key - ID of the media item that was watched. (e.g. Movie or Episode)
+ * @property {number | string} parent_rating_key - ID of the parent of the media item that was watched (e.g. Season if it was a show)
+ * @property {number | string} grandparent_rating_key - ID of the grandparent of the media item that was watched (e.g. Series if it was a show)
  * @property {string} full_title -
  * @property {string} title -
  * @property {string} parent_title -
@@ -132,9 +133,9 @@ export interface TautulliHistoryDetails {
 	secure: number;
 	relayed: number;
 	media_type: string;
-	rating_key: number;
-	parent_rating_key: string;
-	grandparent_rating_key: string;
+	rating_key: number | string;
+	parent_rating_key: number | string;
+	grandparent_rating_key: number | string;
 	full_title: string;
 	title: string;
 	parent_title: string;
@@ -154,6 +155,26 @@ export interface TautulliHistoryDetails {
 	state: unknown;
 	session_key: unknown;
 }
+
+interface TautulliPaginatedResultData {
+	recordsFiltered: number;
+	recordsTotal: number;
+	data: Array<TautulliHistoryDetails>;
+	draw: number;
+	filter_duration: string;
+	total_duration: string;
+}
+
+interface TautulliPaginatedResults {
+	result: string;
+	message: string;
+	data: TautulliPaginatedResultData;
+}
+
+/**
+ * Defualt max number of results to return per page.
+ */
+const PAGINATION_MAX_SIZE = 100;
 
 /**
  * This is the top-level TautulliAPI singleton object.
@@ -183,24 +204,98 @@ const TautulliAPI = {
 	 *
 	 * @param {TautulliHistoryRequestOptions} searchOptions - The query options for which history items to return. "params.cmd" is auto-set to "get_history".
 	 *
-	 * @return {Promise<Array<TautulliHistoryDetails>} Array containing all the history objects returned by the query, from a nested portion of the HTTP response data object.
+	 * @return {Promise<TautulliPaginatedResults>} Array containing all the history objects returned by the query, from a nested portion of the HTTP response data object.
 	 */
-	getHistory: async function (
+	getPaginatedHistory: async function (
 		searchOptions: TautulliHistoryRequestOptions
-	): Promise<Array<TautulliHistoryDetails>> {
+	): Promise<TautulliPaginatedResults> {
 		// Default sort to Date Descending
 		searchOptions.order_column = searchOptions.order_column || "date";
 		searchOptions.order_dir = searchOptions.order_dir || "desc";
+		searchOptions.length = searchOptions.length
+			? searchOptions.length
+			: PAGINATION_MAX_SIZE;
+		searchOptions.start =
+			searchOptions.start || searchOptions.start === 0
+				? searchOptions.start
+				: 0;
+
 		// Re-type to Dictionary in order to include cmd field, which we don't want to be able to set externally.
-		const params: Dictionary = <Dictionary>searchOptions || <Dictionary>{};
-		params.order;
+		const params: Dictionary = <Dictionary>searchOptions;
+
 		params.cmd = "get_history";
+		// params.start = 0;
+		// params.length = 5;
 
 		const data = await this.callApi({
 			params: params
 		});
-		this.debug(data?.data?.data);
-		return data?.data?.data;
+		this.debug(data);
+		return data;
+	},
+	/**
+	 * Returns all history objects from the system, based on provided search options. Loops through paginated results to build full collection of history sessions.
+	 *
+	 * @param {TautulliHistoryRequestOptions} searchOptions - The query options for which history items to return. "params.cmd" is auto-set to "get_history".
+	 *
+	 * @return {Promise<Array<TautulliHistoryDetails>>} An array containing all the history objects that match the filter.
+	 */
+	getAllHistory: async function (
+		searchOptions: TautulliHistoryRequestOptions
+	): Promise<Array<TautulliHistoryDetails>> {
+		searchOptions.length = PAGINATION_MAX_SIZE;
+		searchOptions.start = 0;
+
+		let data = await this.getPaginatedHistory(searchOptions);
+
+		// Number of results per page to expect (could be less on last page)
+		const pageSize: number = PAGINATION_MAX_SIZE;
+
+		// Total number of results to expect across all pages.
+		const totalCount: number =
+			data && data.data && data.data.recordsFiltered
+				? data.data.recordsFiltered
+				: 0;
+
+		// Total number of pages we need to cycle through
+		const pageCount: number = Math.ceil(totalCount / pageSize);
+
+		// Current page we're looking at (starts at 1)
+		let currentPage = 1;
+
+		// Grab the results from first page before cycling through remaining pages.
+		let histories = [];
+		histories = _.unionBy(
+			histories,
+			data && data.data && data.data.data && data.data.data.length
+				? data.data.data
+				: [],
+			"id"
+		);
+
+		// If all the results are in the first page, don't try to get more pages.
+		if (histories.length < totalCount) {
+			while (currentPage < pageCount) {
+				searchOptions.start = currentPage * pageSize;
+				data = await this.getPaginatedHistory(searchOptions);
+
+				currentPage++;
+
+				histories = _.unionBy(
+					histories,
+					data && data.data && data.data.data && data.data.data.length
+						? data.data.data
+						: [],
+					"id"
+				);
+
+				if (histories.length === totalCount) {
+					break;
+				}
+			}
+		}
+		this.debug(histories);
+		return histories;
 	},
 	/**
 	 * Abstracted API calls to Tautulli, adds URL and API Key automatically.
@@ -224,7 +319,15 @@ const TautulliAPI = {
 			requestObj.params["apikey"] = process.env.TAUTULLI_API_KEY;
 			requestObj.method = requestObj.method || "get";
 
+			const start = Date.now();
+
 			const response: AxiosResponse = await axios.request(requestObj);
+
+			const end = Date.now();
+			this.debugPerformance(
+				`Tautulli Call Time: ${requestObj.url}: ${end - start} ms`
+			);
+
 			// this.debug(response);
 			return response?.data?.response;
 		} catch (error) {
@@ -241,6 +344,21 @@ const TautulliAPI = {
 	 */
 	debug: function (data: unknown) {
 		if (process.env.NODE_ENV == "development") {
+			console.log(data);
+		}
+	},
+	/**
+	 * Debugger helper function. Only prints to console if NODE_ENV in .env file is set to "benchmark2".
+	 *
+	 * @remark
+	 * This is for displaying execution time of individual API calls.
+	 *
+	 * @param {unknown} data - Anything you want to print to console.
+	 *
+	 * @return None.
+	 */
+	debugPerformance: function (data: unknown) {
+		if (process.env.NODE_ENV == "benchmark2") {
 			console.log(data);
 		}
 	}

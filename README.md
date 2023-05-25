@@ -46,6 +46,7 @@ SONARR_URL=http://sonarr-ip-address:8989 # Optional
 SONARR_API_KEY=******************** # Optional
 TAUTULLI_URL=http://tautulli-ip-address:8181 # Optional
 TAUTULLI_API_KEY=******************** # Optional
+FEATURE_RUN_ONCE=0 # Optional - 1:Run through once then stop. 0 (default): Repeat every 24h.
 ```
 
 Build and run with:
@@ -77,6 +78,7 @@ services:
       - SONARR_API_KEY=******************** # Optional
       - TAUTULLI_URL=http://tautulli-ip-address:8181 # Optional
       - TAUTULLI_API_KEY=******************** # Optional
+      - FEATURE_RUN_ONCE=0 # Optional - 1:Run through once then stop. 0 (default): Repeat every 24h.
     restart: unless-stopped
 ```
 

@@ -59,6 +59,10 @@ const PlexAPI = {
 	 */
 	MachineId: "",
 	/**
+	 * @property {Array<Dictionary} Labels - Cached list of all tags for a given secion in Plex. Make sure to reset when changing sections.
+	 */
+	Labels: undefined,
+	/**
 	 * This API command is used to get the capabilities of the Plex Media server.
 	 *
 	 * @remarks
@@ -261,12 +265,15 @@ const PlexAPI = {
 			url: `/library/sections/${sectionId}/label`
 		});
 		// this.debug(data);
-		const labels =
-			data && data.MediaContainer && data.MediaContainer.Directory
+		this.Labels =
+			data &&
+			data.MediaContainer &&
+			data.MediaContainer.Directory &&
+			data.MediaContainer.Directory.length
 				? data.MediaContainer.Directory
 				: [];
-		this.debug(labels);
-		return labels;
+		this.debug(this.Labels);
+		return this.Labels;
 	},
 	/**
 	 * Get the numeric key for a given label in a given library section.
@@ -283,12 +290,14 @@ const PlexAPI = {
 		sectionId: number,
 		label: string
 	): Promise<number> {
-		const labels = await this.getLabels(sectionId);
+		if (!this.Labels) {
+			await this.getLabels(sectionId);
+		}
 		let labelKey: number;
 
 		// Find the specific label in the array and return the corresponding key, otherwise return undefined.
-		if (label && labels && _.isArray(labels) && !_.isEmpty(labels)) {
-			const labelObj = _.find(labels, { title: label });
+		if (label && this.Labels && !_.isEmpty(this.Labels)) {
+			const labelObj = _.find(this.Labels, { title: label });
 			labelKey = labelObj && labelObj.key ? labelObj.key : undefined;
 		}
 		this.debug(labelKey);
@@ -310,11 +319,17 @@ const PlexAPI = {
 		itemId: number,
 		label: string
 	): Promise<undefined> {
-		return await this.updateItemDetails(sectionId, itemId, {
+		const result = await this.updateItemDetails(sectionId, itemId, {
 			"label[0].tag.tag": label,
 			"label.locked": 1,
 			type: itemType
 		});
+
+		// Re-cache labels if this is a new one.
+		if (!_.find(this.Labels, { title: label })) {
+			await this.getLabels(sectionId);
+		}
+		return result;
 	},
 	/**
 	 * Returns an array of all the top-level media items (Movies or TV Shows) in a given Section AKA Library.
@@ -388,7 +403,15 @@ const PlexAPI = {
 			requestObj.params = requestObj.params || {};
 			requestObj.params["X-Plex-Token"] = process.env.PLEX_TOKEN;
 
+			const start = Date.now();
+
 			const response: AxiosResponse = await axios.request(requestObj);
+
+			const end = Date.now();
+			this.debugPerformance(
+				`Plex Call Time: ${requestObj.url}: ${end - start} ms`
+			);
+
 			// this.debug(response);
 
 			return response.data;
@@ -406,6 +429,21 @@ const PlexAPI = {
 	 */
 	debug: function (data: unknown) {
 		if (process.env.NODE_ENV == "development") {
+			console.log(data);
+		}
+	},
+	/**
+	 * Debugger helper function. Only prints to console if NODE_ENV in .env file is set to "benchmark2".
+	 *
+	 * @remark
+	 * This is for displaying execution time of individual API calls.
+	 *
+	 * @param {unknown} data - Anything you want to print to console.
+	 *
+	 * @return None.
+	 */
+	debugPerformance: function (data: unknown) {
+		if (process.env.NODE_ENV == "benchmark2") {
 			console.log(data);
 		}
 	}
