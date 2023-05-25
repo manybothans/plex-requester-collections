@@ -57,7 +57,7 @@ Create a `docker-compose.yml` file using the following example, except with your
 version: "2.1"
 services:
   plex-requester-collections:
-    image: manybothans/plex-requester-collections:tagname
+    image: manybothans/plex-requester-collections:latest
     container_name: plex-requester-collections
     environment:
       - NODE_ENV=production # Optional - 'development' will give verbose logging.
@@ -78,7 +78,7 @@ services:
 Run the Docker image with:
 
 ```bash
-docker compose -f /path/to/docker-compose.yml
+docker-compose up -d -f /path/to/docker-compose.yml
 ```
 
 The process will go through once at start, then repeat every 24 hours.
