@@ -20,6 +20,7 @@ The process will go through once at start, then repeat every 24 hours. Make sure
 -   I'm pretty sure Overseerr needs to be using Plex for user authentication, but I haven't tested other setups.
 -   It might mess up if you've created your own collections named something like "Movies Requested By plex_username" or "TV Shows Requested By plex_username".
 -   Source code provided as is, use at your own risk.
+-   Due to limitations in Plex and Tautulli, this won't detect when something is *marked* as watched, the user actually needs to have watched the item in a plex viewing session that was tracked in Tautulli. Working on improving this.
 
 ## Installation and Usage
 
