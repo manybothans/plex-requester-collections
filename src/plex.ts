@@ -6,7 +6,7 @@
  * @todo Define types for Plex API requests and responses.
  *
  * @remarks
- * Plex API Docs used to build this available at https://www.plexopedia.com/plex-media-server/api/library/movie-update/
+ * Plex API Docs used to build this available at https://www.plexopedia.com/plex-media-server/api/
  * Docs are incomplete, but good starting point. I had to do some reverse engineering.
  */
 
@@ -32,7 +32,7 @@ interface Dictionary {
 
 /**
  * @typedef {Object} PlexCollectionOptions - Creates a new Type for the Plex collection creation options.
- * @property {number} sectionId - The numberic ID of the Plex library section we working in.
+ * @property {number} sectionId - The numeric ID of the Plex library section we working in.
  * @property {number} smart - (Optional) Whether to make a Smart or Dumb collection. Possible values: 0, 1. Right now only Smart is supported.
  * @property {string} title - The title for the new collection.
  * @property {string} titleSort - (Optional) The title to use for sorting, if it needs to be different that regular title.
@@ -55,11 +55,11 @@ interface PlexCollectionOptions {
  */
 const PlexAPI = {
 	/**
-	 * @property {string} MachineId - The unique ID for the current Plex Media Server intance.
+	 * @property {string} MachineId - The unique ID for the current Plex Media Server instance.
 	 */
 	MachineId: "",
 	/**
-	 * @property {Array<Dictionary} Labels - Cached list of all tags for a given secion in Plex. Make sure to reset when changing sections.
+	 * @property {Array<Dictionary>} Labels - Cached list of all tags for a given section in Plex. Make sure to reset when changing sections.
 	 */
 	Labels: undefined,
 	/**
@@ -71,12 +71,13 @@ const PlexAPI = {
 	 * @return {Promise<Dictionary>} Object containing details about the Plex server, including the Plex server MachineID.
 	 */
 	getCapabilities: async function (): Promise<Dictionary> {
+		this.debug("PlexAPI.getCapabilities");
 		const data = await this.callApi({ url: "/" });
 		this.debug(data);
 		return data;
 	},
 	/**
-	 * This method returns the Machine ID for the current Plex Media Server intance.
+	 * This method returns the Machine ID for the current Plex Media Server instance.
 	 *
 	 * @remarks
 	 * If we haven't gotten the ID yet, it makes an API call to get it before returning.
@@ -84,6 +85,7 @@ const PlexAPI = {
 	 * @return {Promise<string>} Promise resolving to the string Machine ID.
 	 */
 	getMachineId: async function (): Promise<string> {
+		this.debug("PlexAPI.getMachineId");
 		if (!this.MachineId) {
 			const data = await this.getCapabilities();
 
@@ -109,6 +111,7 @@ const PlexAPI = {
 	 * @return {number} The corresponding number code for the given Plex item type string. Codes contained in PlexTypes ENUM.
 	 */
 	getPlexTypeCode: function (typeString: string): number {
+		this.debug("PlexAPI.getPlexTypeCode");
 		switch (typeString) {
 			case "show":
 				return PlexTypes.SERIES;
@@ -125,6 +128,7 @@ const PlexAPI = {
 	 * @return {Promise<Array<Dictionary>>} An array containing all the library sections on the Plex server, from a nested portion of the HTTP response data object.
 	 */
 	getSections: async function (): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getSections");
 		const data = await this.callApi({ url: "/library/sections" });
 		const sections =
 			data && data.MediaContainer && data.MediaContainer.Directory
@@ -136,13 +140,14 @@ const PlexAPI = {
 	/**
 	 * This API command returns a list of all the collections in a given Plex library section.
 	 *
-	 * @param {number} sectionId - The numberic ID of the Plex library section we working in.
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
 	 *
 	 * @return {Promise<Array<Dictionary>>} An array containing all the collections from the given library section, from a nested portion of the HTTP response data object.
 	 */
 	getCollections: async function (
 		sectionId: number
 	): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getCollections");
 		const data = await this.callApi({
 			url: `/library/sections/${sectionId}/collections`,
 			params: {
@@ -173,6 +178,7 @@ const PlexAPI = {
 	createSmartCollection: async function (
 		options: PlexCollectionOptions
 	): Promise<Dictionary> {
+		this.debug("PlexAPI.createSmartCollection");
 		const machineId = await PlexAPI.getMachineId();
 		options.sort = options.sort ? options.sort : "titleSort";
 		options.smart = 1; //Force smart collections only for this method
@@ -226,6 +232,7 @@ const PlexAPI = {
 	 * @return {Promise<Array<Dictionary>>} An array containing all the user account objects on the Plex server, from a nested portion of the HTTP response data object.
 	 */
 	getAccounts: async function (): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getAccounts");
 		const data = await this.callApi({ url: "/accounts" });
 		const accounts =
 			data && data.MediaContainer && data.MediaContainer.Account
@@ -242,6 +249,7 @@ const PlexAPI = {
 	 * @return {Promise<Dictionary>} The account object corresponding to the provided account ID, from a nested portion of the HTTP response data object.
 	 */
 	getSingleAccount: async function (accountId: number): Promise<Dictionary> {
+		this.debug("PlexAPI.getSingleAccount");
 		const data = await this.callApi({ url: "/accounts/" + accountId });
 		const account =
 			data &&
@@ -256,11 +264,12 @@ const PlexAPI = {
 	/**
 	 * Get a list of all the labels for this library section, along with label keys.
 	 *
-	 * @param {number} sectionId - The numberic ID of the Plex library section we working in.
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
 	 *
 	 * @return {Promise<Array<Dictionary>>} An array containing all existing labels and their keys in a given Plex library section, from a nested portion of the HTTP response data object.
 	 */
 	getLabels: async function (sectionId: number): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getLabels");
 		const data = await this.callApi({
 			url: `/library/sections/${sectionId}/label`
 		});
@@ -281,7 +290,7 @@ const PlexAPI = {
 	 * @remarks
 	 * The label must already exist in the library section, if not use addLabelToItem first.
 	 *
-	 * @param {number} sectionId - The numberic ID of the Plex library section we working in.
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
 	 * @param {string} label - The tag or label we want to find the numeric key for.
 	 *
 	 * @return {Promise<number>} The numeric key of the label string we're looking for.
@@ -290,6 +299,8 @@ const PlexAPI = {
 		sectionId: number,
 		label: string
 	): Promise<number> {
+		this.debug("PlexAPI.getKeyForLabel");
+		label = label.toLowerCase();
 		if (!this.Labels) {
 			await this.getLabels(sectionId);
 		}
@@ -304,11 +315,11 @@ const PlexAPI = {
 		return labelKey;
 	},
 	/**
-	 * Helper funtion to simplify adding labels to plex items (Movies, Shows, Collections, etc.).
+	 * Helper function to simplify adding labels to plex items (Movies, Shows, Collections, etc.).
 	 *
-	 * @param {number} sectionId - The numberic ID of the Plex library section we working in.
-	 * @param {number} itemType - The numberic code of the type of Plex item we're updating (movie, show, collection, etc.). From the ENUM PlexTypes.
-	 * @param {number} itemId - The numberic ID of the Plex item we're updating (movie, show, collection, etc.).
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
+	 * @param {number} itemType - The numeric code of the type of Plex item we're updating (movie, show, collection, etc.). From the ENUM PlexTypes.
+	 * @param {number} itemId - The numeric ID of the Plex item we're updating (movie, show, collection, etc.).
 	 * @param {string} label - The tag or label we want to add to the Plex item.
 	 *
 	 * @return {Promise<undefined>} No returned data on Promise resolve.
@@ -319,6 +330,8 @@ const PlexAPI = {
 		itemId: number,
 		label: string
 	): Promise<undefined> {
+		this.debug("PlexAPI.addLabelToItem");
+		label = label.toLowerCase();
 		const result = await this.updateItemDetails(sectionId, itemId, {
 			"label[0].tag.tag": label,
 			"label.locked": 1,
@@ -332,15 +345,46 @@ const PlexAPI = {
 		return result;
 	},
 	/**
+	 * Helper function to simplify removing labels from Plex items (Movies, Shows, Collections, etc.).
+	 *
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
+	 * @param {number} itemType - The numeric code of the type of Plex item we're updating (movie, show, collection, etc.). From the ENUM PlexTypes.
+	 * @param {number} itemId - The numeric ID of the Plex item we're updating (movie, show, collection, etc.).
+	 * @param {string} label - The tag or label we want to remove from the Plex item.
+	 *
+	 * @return {Promise<undefined>} No returned data on Promise resolve.
+	 */
+	removeLabelFromItem: async function (
+		sectionId: number,
+		itemType: number,
+		itemId: number,
+		label: string
+	): Promise<undefined> {
+		this.debug("PlexAPI.removeLabelFromItem");
+		label = label.toLowerCase();
+		const result = await this.updateItemDetails(sectionId, itemId, {
+			"label[].tag.tag-": label,
+			"label.locked": 1,
+			type: itemType
+		});
+
+		// Re-cache labels if this is a new one.
+		if (!_.find(this.Labels, { title: label })) {
+			await this.getLabels(sectionId);
+		}
+		return result;
+	},
+	/**
 	 * Returns an array of all the top-level media items (Movies or TV Shows) in a given Section AKA Library.
 	 *
-	 * @param {number} sectionId - The numberic ID of the Plex library section we working in.
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
 	 *
 	 * @return {Promise<Array<Dictionary>>} An array containing all the media items in a given Plex library section, from a nested portion of the HTTP response data object.
 	 */
 	getAllItems: async function (
 		sectionId: number
 	): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getAllItems");
 		const data = await this.callApi({
 			url: `/library/sections/${sectionId}/all`
 		});
@@ -357,8 +401,8 @@ const PlexAPI = {
 	 *
 	 * @todo Type def for updates object.
 	 *
-	 * @param {number} sectionId - The numberic ID of the Plex library section we working in.
-	 * @param {number} itemId - The numberic ID of the Plex item we're updating (movie, show, collection, etc.).
+	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
+	 * @param {number} itemId - The numeric ID of the Plex item we're updating (movie, show, collection, etc.).
 	 * @param {Dictionary} updates - Object containing the fields and values we want to update on the Plex item. (eg {"title": "New Title"})
 	 *
 	 * @return {Promise<Dictionary>} The data portion of the HTTP response, containing details about the updated Plex Item.
@@ -368,6 +412,7 @@ const PlexAPI = {
 		itemId: number,
 		updates: Dictionary
 	): Promise<Dictionary> {
+		this.debug("PlexAPI.updateItemDetails");
 		updates = updates || {};
 		updates.type = updates.type || PlexTypes.MOVIE;
 		updates.id = itemId;
@@ -391,6 +436,7 @@ const PlexAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("PlexAPI.callApi");
 		if (!process.env.PLEX_URL || !process.env.PLEX_TOKEN) {
 			throw error(
 				"Missing .env file containing PLEX_URL and/or PLEX_TOKEN. See README.md"
@@ -467,7 +513,7 @@ uri=server://baaf4cd09f73f07ddc676de067b123704c60cb1f/com.plexapp.plugins.librar
 */
 
 /*
-create dumb colleciton
+create dumb collection
 /library/collections
 POST
 type=1&
@@ -521,11 +567,11 @@ show.label=137662
 update collection
 /library/sections/1/all
 PUT
-type=18&id=38010&includeExternalMedia=1&titleSort.value=%21000_Boop&titleSort.locked=1
+type=18&id=38010&includeExternalMedia=1&titleSort.value=%21000_Poop&titleSort.locked=1
 */
 
 /*
-delete colleciton
+delete collection
 /library/collections/38023
 DELETE
 */

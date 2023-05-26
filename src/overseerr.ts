@@ -1,5 +1,5 @@
 /**
- * Contains all the methods required to interact with Overseerr request managemenet API, as it relates to this project.
+ * Contains all the methods required to interact with Overseerr request management API, as it relates to this project.
  *
  * @author Jess Latimer @manybothans
  *
@@ -103,7 +103,7 @@ interface OverseerrRequestDetails {
 }
 
 /**
- * Defualt max number of results to return per page.
+ * Default max number of results to return per page.
  */
 const PAGINATION_MAX_SIZE = 100;
 
@@ -117,6 +117,7 @@ const OverseerrAPI = {
 	 * @return {Promise<Dictionary>} Object containing status of Overseerr instance.
 	 */
 	getStatus: async function (): Promise<Dictionary> {
+		this.debug("OverseerrAPI.getStatus");
 		const data = await this.callApi({ url: "/status" });
 		this.debug(data);
 		return data;
@@ -130,11 +131,12 @@ const OverseerrAPI = {
 	 *
 	 * @param {OverseerrPaginationOptions} params - Pagination options for the request. See Type Definition for details.
 	 *
-	 * @return {Promise<Dictionary>} The data portion of the HTTP response, containing info on the returned page of results and the page of resuts themselves.
+	 * @return {Promise<Dictionary>} The data portion of the HTTP response, containing info on the returned page of results and the page of results themselves.
 	 */
 	getPaginatedRequests: async function (
 		params: OverseerrPaginationOptions = <OverseerrPaginationOptions>{}
 	): Promise<Dictionary> {
+		this.debug("OverseerrAPI.getPaginatedRequests");
 		params.take = params.take || PAGINATION_MAX_SIZE; // Max number of items returned per page
 		params.skip = params.skip || 0; // "skip" is number of items, not pages.
 		params.filter = params.filter || "available"; // Available values : all, approved, available, pending, processing, unavailable, failed
@@ -157,6 +159,7 @@ const OverseerrAPI = {
 	getAllRequests: async function (
 		filter = "available"
 	): Promise<Array<OverseerrRequestDetails>> {
+		this.debug("OverseerrAPI.getAllRequests");
 		let data = await this.getPaginatedRequests({
 			filter: filter,
 			skip: 0,
@@ -230,6 +233,7 @@ const OverseerrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("OverseerrAPI.callApi");
 		if (!process.env.OVERSEERR_URL || !process.env.OVERSEERR_API_KEY) {
 			throw error(
 				"Missing .env file containing OVERSEERR_URL and/or OVERSEERR_API_KEY. See README.md"

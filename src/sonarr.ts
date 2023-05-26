@@ -94,7 +94,7 @@ interface SonarrSeriesDetails {
  */
 const SonarrAPI = {
 	/**
-	 * @property {Array<SonarrTag} Tags - Cached list of all tags in Sonarr.
+	 * @property {Array<SonarrTag>} Tags - Cached list of all tags in Sonarr.
 	 */
 	Tags: undefined,
 	/**
@@ -103,6 +103,7 @@ const SonarrAPI = {
 	 * @return {Promise<Array<Dictionary>>} Returns the health status of the Radarr server instance.
 	 */
 	getHealth: async function (): Promise<Array<Dictionary>> {
+		this.debug("SonarrAPI.getHealth");
 		const data = await this.callApi({ url: "/health" });
 		this.debug(data);
 		return data;
@@ -113,6 +114,7 @@ const SonarrAPI = {
 	 * @return {Promise<Array<SonarrTag>>} Returns the list of tags from the server.
 	 */
 	getTags: async function (): Promise<Array<SonarrTag>> {
+		this.debug("SonarrAPI.getTags");
 		this.Tags = await this.callApi({ url: "/tag" });
 		if (!_.isArray(this.Tags)) {
 			this.Tags = undefined;
@@ -131,6 +133,8 @@ const SonarrAPI = {
 	 * @return {Promise<SonarrTag>} Returns the label and ID of the new tag.
 	 */
 	createTag: async function (tag: string): Promise<SonarrTag> {
+		this.debug("SonarrAPI.createTag");
+		tag = tag.toLowerCase();
 		if (!this.Tags) {
 			await this.getTags();
 		}
@@ -156,6 +160,7 @@ const SonarrAPI = {
 	 *
 	 * @param {number} itemId - The ID of the media item you want.
 	 * @param {string} tag - The string label of the tag you want to add.
+	 * @param {SonarrSeriesDetails} mediaObject - (Optional) The current media details before updating, to reduce calls.
 	 *
 	 * @return {Promise<SonarrSeriesDetails>} The details of the updated media item.
 	 */
@@ -164,12 +169,46 @@ const SonarrAPI = {
 		tag: string,
 		mediaObject?: SonarrSeriesDetails
 	): Promise<SonarrSeriesDetails> {
-		const tagDetails = await SonarrAPI.createTag(tag);
+		this.debug("SonarrAPI.addTagToMediaItem");
+		tag = tag.toLowerCase();
+		const tagDetails = await this.createTag(tag);
 		const mediaDetails = mediaObject
 			? mediaObject
-			: await SonarrAPI.getMediaItem(itemId);
+			: await this.getMediaItem(itemId);
 		mediaDetails.tags = _.union(mediaDetails.tags, [tagDetails?.id]);
-		const result = SonarrAPI.updateMediaItem(itemId, mediaDetails);
+		const result = this.updateMediaItem(itemId, mediaDetails);
+		this.debug(result);
+		return result;
+	},
+	/**
+	 * Helper function to remove a tag from a media item.
+	 *
+	 * @remark
+	 * This can results in 3 different API calls.
+	 *
+	 * @param {number} itemId - The ID of the media item you want.
+	 * @param {string} tag - The string label of the tag you want to remove.
+	 * @param {SonarrSeriesDetails} mediaObject - (Optional) The current media details before updating, to reduce calls.
+	 *
+	 * @return {Promise<SonarrSeriesDetails>} The details of the updated media item.
+	 */
+	removeTagFromMediaItem: async function (
+		itemId: number,
+		tag: string,
+		mediaObject?: SonarrSeriesDetails
+	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.removeTagFromMediaItem");
+		tag = tag.toLowerCase();
+		// This will just return the existing tag object.
+		const tagDetails = await this.createTag(tag);
+		// Unless we provided the current object, get the current object.
+		const movieDetails = mediaObject
+			? mediaObject
+			: await this.getMediaItem(itemId);
+		// Remove the tag.
+		_.pull(movieDetails.tags, tagDetails?.id);
+		// Save changes to server.
+		const result = this.updateMediaItem(itemId, movieDetails);
 		this.debug(result);
 		return result;
 	},
@@ -183,6 +222,7 @@ const SonarrAPI = {
 	getMediaItemForTVDBId: async function (
 		tvdbId: number
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.getMediaItemForTVDBId");
 		// Get the Radarr item from the TVDB ID, so we can use the Radarr ID.
 		const items = await this.getMediaItems(tvdbId);
 		const item: SonarrSeriesDetails = _.find(
@@ -198,17 +238,18 @@ const SonarrAPI = {
 	 * @remark
 	 * This is useful to translate a TVDB ID from Overseerr or Plex to a Sonarr ID, which is needed for updating a media item.
 	 *
-	 * @param {number} tvtbId - (Optional) The TVDB ID of the media item to search for.
+	 * @param {number} tvdbId - (Optional) The TVDB ID of the media item to search for.
 	 *
 	 * @return {Promise<Array<SonarrSeriesDetails>>} Returns the details of the media item.
 	 */
 	getMediaItems: async function (
-		tvtbId?: number
+		tvdbId?: number
 	): Promise<Array<SonarrSeriesDetails>> {
+		this.debug("SonarrAPI.getMediaItems");
 		const request: Dictionary = {
 			url: "/series"
 		};
-		if (tvtbId) request.params = { tvtbId: tvtbId };
+		if (tvdbId) request.params = { tvdbId: tvdbId };
 		const data = await this.callApi(request);
 		this.debug(data);
 		return data;
@@ -223,6 +264,7 @@ const SonarrAPI = {
 	getMediaItem: async function (
 		itemId: number
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.getMediaItem");
 		const data = await this.callApi({
 			url: "/series/" + itemId
 		});
@@ -241,6 +283,7 @@ const SonarrAPI = {
 		itemId: number,
 		options: SonarrSeriesDetails
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.updateMediaItem");
 		const data = await this.callApi({
 			url: "/series/" + itemId,
 			method: "put",
@@ -262,6 +305,7 @@ const SonarrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("SonarrAPI.callApi");
 		if (!process.env.SONARR_URL || !process.env.SONARR_API_KEY) {
 			throw error(
 				"Missing .env file containing SONARR_URL and/or SONARR_API_KEY. See README.md"

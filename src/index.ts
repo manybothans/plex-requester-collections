@@ -11,18 +11,20 @@ import moment from "moment";
 
 const TAG_STALE_REQUEST = "stale_request";
 const TAG_REQUESTER_WATCHED = "requester_watched";
-const TAG_PREFEX_REQUESTER = "requester:";
+const TAG_OTHERS_WATCHING = "others_watching";
+const TAG_PREFIX_REQUESTER = "requester:";
 const TAG_PREFIX_OWNER = "owner:";
 const COLL_SORT_PREFIX = "zzz_";
 const COLL_DEFAULT_SORT = encodeURIComponent("addedAt:desc");
 const COLL_TITLE_PREFIX_MOVIE = "Movies Requested by ";
 const COLL_TITLE_PREFIX_SHOW = "TV Shows Requested by ";
-const STALE_ADDEDDATE_THRESHOLD = moment().subtract(6, "months");
-const STALE_VIEWDATE_THRESHOLD = moment().subtract(3, "months");
+const STALE_ADDED_DATE_THRESHOLD = moment().subtract(6, "months");
+const STALE_VIEW_DATE_THRESHOLD = moment().subtract(3, "months");
+const MS_24_HOURS = 86400000;
 
 const app = async function () {
 	// Get all the requests from Overseerr.
-	const requests = await OverseerrAPI.getAllRequests();
+	const requests = await OverseerrAPI.getAllRequests("all");
 
 	// Get the Plex library sections. It's not easy to get the section ID for a given media item,
 	// so it's easier to start with the sections and work down.
@@ -89,7 +91,7 @@ const app = async function () {
 			console.log(`${mediaItem.title} requested by ${plexUsername}`);
 
 			// Tag the media item.
-			const requesterTagValue = TAG_PREFEX_REQUESTER + plexUsername;
+			const requesterTagValue = TAG_PREFIX_REQUESTER + plexUsername;
 			await PlexAPI.addLabelToItem(
 				sectionId,
 				PlexAPI.getPlexTypeCode(sectionType),
@@ -122,7 +124,7 @@ const app = async function () {
 				// If collection exists with this title, assume it's set up correctly and we don't need to do anything else.
 				// If collection does not exist with this title, create it and tag is with owner label.
 				if (!collection) {
-					// Get the numberic ID of the label we're using right now.
+					// Get the numeric ID of the label we're using right now.
 					const mediaLabelKey = await PlexAPI.getKeyForLabel(
 						sectionId,
 						requesterTagValue
@@ -160,7 +162,7 @@ const app = async function () {
 			}
 
 			// Now let's start looking at watch history and Radarr/Sonarr.
-			// Only continue if we have the right creds.
+			// Only continue if we have the right credentials.
 
 			// Handle Radarr items.
 			if (
@@ -170,7 +172,7 @@ const app = async function () {
 				process.env.RADARR_URL &&
 				process.env.RADARR_API_KEY
 			) {
-				// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
+				// Get the Radarr item using the TMDB ID, so we can get the proper Radarr ID needed for updates.
 				let radarrItem = await RadarrAPI.getMediaItemForTMDBId(
 					request?.media?.tmdbId
 				);
@@ -195,15 +197,54 @@ const app = async function () {
 					order_dir: "desc"
 				});
 
-				// Filter history sessions to find if the media item was fully watched by the requester.
-				const filteredHistories = _.filter(
+				// Filter history sessions to look at everyone expect the requester.
+				const filteredHistories_others = _.filter(
 					histories,
 					(session: TautulliHistoryDetails) =>
-						session?.user === plexUsername &&
-						session?.rating_key === mediaId
+						session?.user !== plexUsername
 				);
+				// When was the last time someone other than the requester watched this?
+				const lastWatchedDate_others =
+					filteredHistories_others && filteredHistories_others.length
+						? filteredHistories_others[0].date * 1000 // Convert from seconds to milliseconds
+						: 0;
+
+				// Have people other then the requester watched the item within the stale viewing threshold?
+				if (
+					moment(lastWatchedDate_others) > STALE_VIEW_DATE_THRESHOLD
+				) {
+					radarrItem = await RadarrAPI.addTagToMediaItem(
+						radarrItem.id,
+						TAG_OTHERS_WATCHING,
+						radarrItem
+					);
+					radarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrItem.id,
+						TAG_STALE_REQUEST,
+						radarrItem
+					);
+
+					// Print to console.
+					console.log(" -> Non-requester(s) watching");
+				}
+				// Otherwise remove the tag in case it was added in a previous session.
+				else {
+					radarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrItem.id,
+						TAG_OTHERS_WATCHING,
+						radarrItem
+					);
+				}
+
+				// Filter history sessions to look at just requester user.
+				const filteredHistories_requester = _.filter(
+					histories,
+					(session: TautulliHistoryDetails) =>
+						session?.user === plexUsername
+				);
+				// Check if requester has fully watched it.
 				const watchedSession = _.find(
-					filteredHistories,
+					filteredHistories_requester,
 					(session: TautulliHistoryDetails) =>
 						session?.watched_status === 1
 				);
@@ -222,16 +263,33 @@ const app = async function () {
 				}
 				// If they haven't finished watching it, is it a stale request?
 				else {
-					const lastWatchedDate =
-						filteredHistories && filteredHistories.length
-							? filteredHistories[0].date
+					// Remove Watched tag in case it was added in a previous session erroneously (Maybe needed more for TV shows, but what the heck).
+					radarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrItem.id,
+						TAG_REQUESTER_WATCHED,
+						radarrItem
+					);
+					// Remove the existing Stale tag in case they started watching it since last session.
+					radarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrItem.id,
+						TAG_STALE_REQUEST,
+						radarrItem
+					);
+					// When was the last time the requester watched this?
+					const lastWatchedDate_requester =
+						filteredHistories_requester &&
+						filteredHistories_requester.length
+							? filteredHistories_requester[0].date * 1000 // Convert from seconds to milliseconds
 							: 0;
 
-					// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
+					// If the media item was downloaded more than 6 months ago, and the requester (OR ANYONE ELSE) hasn't watched in the last 3 months, tag it as stale.
 					if (
 						moment(request.media?.mediaAddedAt) <
-							STALE_ADDEDDATE_THRESHOLD &&
-						moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
+							STALE_ADDED_DATE_THRESHOLD &&
+						moment(lastWatchedDate_requester) <
+							STALE_VIEW_DATE_THRESHOLD &&
+						moment(lastWatchedDate_others) <
+							STALE_VIEW_DATE_THRESHOLD
 					) {
 						radarrItem = await RadarrAPI.addTagToMediaItem(
 							radarrItem.id,
@@ -241,6 +299,14 @@ const app = async function () {
 
 						// Print to console.
 						console.log(" -> Stale request");
+					}
+					// Otherwise remove the tag.
+					else {
+						radarrItem = await RadarrAPI.removeTagFromMediaItem(
+							radarrItem.id,
+							TAG_STALE_REQUEST,
+							radarrItem
+						);
 					}
 				}
 			}
@@ -252,7 +318,7 @@ const app = async function () {
 				process.env.SONARR_URL &&
 				process.env.SONARR_API_KEY
 			) {
-				// Find the media item in Sonarr.
+				// Get the Sonarr item using the TVDB ID, so we can get the proper Sonarr ID needed for updates.
 				let sonarrItem = await SonarrAPI.getMediaItemForTVDBId(
 					request?.media?.tvdbId
 				);
@@ -277,16 +343,54 @@ const app = async function () {
 					order_dir: "desc"
 				});
 
-				// Filter history sessions to find if the media item was fully watched by the requester.
-				const filteredHistories = _.filter(
+				// Filter history sessions to look at everyone expect the requester.
+				const filteredHistories_others = _.filter(
 					histories,
 					(session: TautulliHistoryDetails) =>
-						session?.user === plexUsername &&
-						session?.grandparent_rating_key === mediaId
+						session?.user !== plexUsername
+				);
+				// When was the last time someone other than the requester watched this?
+				const lastWatchedDate_others =
+					filteredHistories_others && filteredHistories_others.length
+						? _.first(filteredHistories_others).date * 1000 // Convert from seconds to milliseconds
+						: 0;
+
+				// Have people other then the requester watched the item within the stale viewing threshold?
+				if (
+					moment(lastWatchedDate_others) > STALE_VIEW_DATE_THRESHOLD
+				) {
+					sonarrItem = await SonarrAPI.addTagToMediaItem(
+						sonarrItem.id,
+						TAG_OTHERS_WATCHING,
+						sonarrItem
+					);
+					sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						sonarrItem.id,
+						TAG_STALE_REQUEST,
+						sonarrItem
+					);
+
+					// Print to console.
+					console.log(" -> Non-requester(s) watching");
+				}
+				// Otherwise remove the tag in case it was added in a previous session.
+				else {
+					sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						sonarrItem.id,
+						TAG_OTHERS_WATCHING,
+						sonarrItem
+					);
+				}
+
+				// Filter history sessions to look at just requester user.
+				const filteredHistories_requester = _.filter(
+					histories,
+					(session: TautulliHistoryDetails) =>
+						session?.user === plexUsername
 				);
 
-				// Filter the history sessions by "fully watched"
-				const watchedHistories = _.filter(filteredHistories, {
+				// Check if requester has fully watched it.
+				const watchedHistories = _.filter(filteredHistories_requester, {
 					watched_status: 1
 				});
 
@@ -296,7 +400,7 @@ const app = async function () {
 					"rating_key"
 				);
 
-				// Has the user watched all the epsiodes, and have all the current episodes been downloaded?
+				// Has the user watched all the episodes, and have all the current episodes been downloaded?
 				if (
 					uniqueEpisodeHistories?.length ===
 						sonarrItem?.statistics?.episodeCount &&
@@ -314,16 +418,34 @@ const app = async function () {
 				}
 				// If they haven't finished watching it, is it a stale request?
 				else {
-					const lastWatchedDate =
-						filteredHistories && filteredHistories.length
-							? filteredHistories[0].date
+					// Remove Watched tag in case it was added in a previous session (e.g. maybe they were finished before, but new episodes came out.).
+					sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						sonarrItem.id,
+						TAG_REQUESTER_WATCHED,
+						sonarrItem
+					);
+					// Remove the existing Stale tag in case they started watching it since last session.
+					sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						sonarrItem.id,
+						TAG_STALE_REQUEST,
+						sonarrItem
+					);
+
+					// When was the last time the requester watched this?
+					const lastWatchedDate_requester =
+						filteredHistories_requester &&
+						filteredHistories_requester.length
+							? filteredHistories_requester[0].date * 1000 // Convert from seconds to milliseconds
 							: 0;
 
-					// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
+					// If the media item was downloaded more than 6 months ago, and the requester (OR ANYONE ELSE) hasn't watched in the last 3 months, tag it as stale.
 					if (
 						moment(request.media?.mediaAddedAt) <
-							STALE_ADDEDDATE_THRESHOLD &&
-						moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
+							STALE_ADDED_DATE_THRESHOLD &&
+						moment(lastWatchedDate_requester) <
+							STALE_VIEW_DATE_THRESHOLD &&
+						moment(lastWatchedDate_others) <
+							STALE_VIEW_DATE_THRESHOLD
 					) {
 						sonarrItem = await SonarrAPI.addTagToMediaItem(
 							sonarrItem.id,
@@ -333,6 +455,14 @@ const app = async function () {
 
 						// Print to console.
 						console.log(" -> Stale request");
+					}
+					// Otherwise remove the tag.
+					else {
+						sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+							sonarrItem.id,
+							TAG_STALE_REQUEST,
+							sonarrItem
+						);
 					}
 				}
 			}
@@ -347,12 +477,19 @@ const app = async function () {
 	console.log("Done, Done, Done.");
 };
 
-// Feature flag to disable running every 24h. For development. Defaults to running every 24h.
-if (process.env.FEATURE_RUN_ONCE !== "1") {
-	// Run every 24 h.
-	setInterval(app, 86400000);
-}
-app();
+const startDelay =
+	process.env.START_DELAY_MS && parseInt(process.env.START_DELAY_MS) > 0
+		? parseInt(process.env.START_DELAY_MS)
+		: 0;
+
+setTimeout(() => {
+	if (process.env.FEATURE_RUN_ONCE !== "1") {
+		// Feature flag to disable running every 24h. For development. Defaults to running every 24h.
+		// Run every 24 h.
+		setInterval(app, MS_24_HOURS);
+	}
+	app();
+}, startDelay);
 
 // For displaying execution time of each media item.
 const debugPerformance = function (data: unknown) {

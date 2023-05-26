@@ -157,7 +157,7 @@ interface RadarrMediaDetails {
  */
 const RadarrAPI = {
 	/**
-	 * @property {Array<RadarrTag} Tags - Cached list of all tags in Radarr.
+	 * @property {Array<RadarrTag>} Tags - Cached list of all tags in Radarr.
 	 */
 	Tags: undefined,
 	/**
@@ -166,6 +166,7 @@ const RadarrAPI = {
 	 * @return {Promise<Array<Dictionary>>} Returns the health status of the Radarr server instance.
 	 */
 	getHealth: async function (): Promise<Array<Dictionary>> {
+		this.debug("RadarrAPI.getHealth");
 		const data = await this.callApi({ url: "/health" });
 		this.debug(data);
 		return data;
@@ -176,6 +177,7 @@ const RadarrAPI = {
 	 * @return {Promise<Array<RadarrTag>>} Returns the list of tags from the server.
 	 */
 	getTags: async function (): Promise<Array<RadarrTag>> {
+		this.debug("RadarrAPI.getTags");
 		this.Tags = await this.callApi({ url: "/tag" });
 		if (!_.isArray(this.Tags)) {
 			this.Tags = undefined;
@@ -194,6 +196,8 @@ const RadarrAPI = {
 	 * @return {Promise<RadarrTag>} Returns the label and ID of the new tag.
 	 */
 	createTag: async function (tag: string): Promise<RadarrTag> {
+		this.debug("RadarrAPI.createTag");
+		tag = tag.toLowerCase();
 		if (!this.Tags) {
 			await this.getTags();
 		}
@@ -215,10 +219,11 @@ const RadarrAPI = {
 	 * Helper function to add a tag to a media item.
 	 *
 	 * @remark
-	 * This results in 3 different API calls.
+	 * This can results in 3 different API calls.
 	 *
 	 * @param {number} itemId - The ID of the media item you want.
 	 * @param {string} tag - The string label of the tag you want to add.
+	 * @param {RadarrMediaDetails} mediaObject - (Optional) The current media details before updating, to reduce calls.
 	 *
 	 * @return {Promise<RadarrMediaDetails>} The details of the updated media item.
 	 */
@@ -227,12 +232,46 @@ const RadarrAPI = {
 		tag: string,
 		mediaObject?: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
-		const tagDetails = await RadarrAPI.createTag(tag);
+		this.debug("RadarrAPI.addTagToMediaItem");
+		tag = tag.toLowerCase();
+		const tagDetails = await this.createTag(tag);
 		const movieDetails = mediaObject
 			? mediaObject
-			: await RadarrAPI.getMediaItem(itemId);
+			: await this.getMediaItem(itemId);
 		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
-		const result = RadarrAPI.updateMediaItem(itemId, movieDetails);
+		const result = this.updateMediaItem(itemId, movieDetails);
+		this.debug(result);
+		return result;
+	},
+	/**
+	 * Helper function to remove a tag from a media item.
+	 *
+	 * @remark
+	 * This can results in 3 different API calls.
+	 *
+	 * @param {number} itemId - The ID of the media item you want.
+	 * @param {string} tag - The string label of the tag you want to remove.
+	 * @param {RadarrMediaDetails} mediaObject - (Optional) The current media details before updating, to reduce calls.
+	 *
+	 * @return {Promise<RadarrMediaDetails>} The details of the updated media item.
+	 */
+	removeTagFromMediaItem: async function (
+		itemId: number,
+		tag: string,
+		mediaObject?: RadarrMediaDetails
+	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.removeTagFromMediaItem");
+		tag = tag.toLowerCase();
+		// This will just return the existing tag object.
+		const tagDetails = await this.createTag(tag);
+		// Unless we provided the current object, get the current object.
+		const movieDetails = mediaObject
+			? mediaObject
+			: await this.getMediaItem(itemId);
+		// Remove the tag.
+		_.pull(movieDetails.tags, tagDetails?.id);
+		// Save changes to server.
+		const result = this.updateMediaItem(itemId, movieDetails);
 		this.debug(result);
 		return result;
 	},
@@ -246,6 +285,7 @@ const RadarrAPI = {
 	getMediaItemForTMDBId: async function (
 		tmdbId: number
 	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.getMediaItemForTMDBId");
 		// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
 		const items = await this.getMediaItems(tmdbId);
 		const item: RadarrMediaDetails = _.find(
@@ -256,7 +296,7 @@ const RadarrAPI = {
 		return item;
 	},
 	/**
-	 * Get all the media items, or get a single media item matching a TMBD ID.
+	 * Get all the media items, or get a single media item matching a TMDB ID.
 	 *
 	 * @remark
 	 * This is useful to translate a TMDB ID from Overseerr or Plex to a Radarr ID, which is needed for updating a media item.
@@ -268,6 +308,7 @@ const RadarrAPI = {
 	getMediaItems: async function (
 		tmdbId?: number
 	): Promise<Array<RadarrMediaDetails>> {
+		this.debug("RadarrAPI.getMediaItems");
 		const request: Dictionary = {
 			url: "/movie"
 		};
@@ -284,6 +325,7 @@ const RadarrAPI = {
 	 * @return {Promise<RadarrMediaDetails>} Returns the details of the media item.
 	 */
 	getMediaItem: async function (itemId: number): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.getMediaItem");
 		const data = await this.callApi({
 			url: "/movie/" + itemId
 		});
@@ -302,6 +344,7 @@ const RadarrAPI = {
 		itemId: number,
 		options: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.updateMediaItem");
 		const data = await this.callApi({
 			url: "/movie/" + itemId,
 			method: "put",
@@ -323,6 +366,7 @@ const RadarrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("RadarrAPI.callApi");
 		if (!process.env.RADARR_URL || !process.env.RADARR_API_KEY) {
 			throw error(
 				"Missing .env file containing RADARR_URL and/or RADARR_API_KEY. See README.md"
