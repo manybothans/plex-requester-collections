@@ -86,6 +86,7 @@ const app = async function () {
 			// Init some values we're going to need.
 			const mediaId = parseInt(<string>mediaItem.ratingKey);
 			const plexUsername = request?.requestedBy?.plexUsername;
+			const displayName = request?.requestedBy?.displayName;
 
 			// Print to console.
 			console.log(`${mediaItem.title} requested by ${plexUsername}`);
