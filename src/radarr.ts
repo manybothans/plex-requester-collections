@@ -166,6 +166,7 @@ const RadarrAPI = {
 	 * @return {Promise<Array<Dictionary>>} Returns the health status of the Radarr server instance.
 	 */
 	getHealth: async function (): Promise<Array<Dictionary>> {
+		this.debug("RadarrAPI.getHealth");
 		const data = await this.callApi({ url: "/health" });
 		this.debug(data);
 		return data;
@@ -176,6 +177,7 @@ const RadarrAPI = {
 	 * @return {Promise<Array<RadarrTag>>} Returns the list of tags from the server.
 	 */
 	getTags: async function (): Promise<Array<RadarrTag>> {
+		this.debug("RadarrAPI.getTags");
 		this.Tags = await this.callApi({ url: "/tag" });
 		if (!_.isArray(this.Tags)) {
 			this.Tags = undefined;
@@ -194,6 +196,8 @@ const RadarrAPI = {
 	 * @return {Promise<RadarrTag>} Returns the label and ID of the new tag.
 	 */
 	createTag: async function (tag: string): Promise<RadarrTag> {
+		this.debug("RadarrAPI.createTag");
+		tag = tag.toLowerCase();
 		if (!this.Tags) {
 			await this.getTags();
 		}
@@ -228,6 +232,8 @@ const RadarrAPI = {
 		tag: string,
 		mediaObject?: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.addTagToMediaItem");
+		tag = tag.toLowerCase();
 		const tagDetails = await this.createTag(tag);
 		const movieDetails = mediaObject
 			? mediaObject
@@ -254,6 +260,8 @@ const RadarrAPI = {
 		tag: string,
 		mediaObject?: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.removeTagFromMediaItem");
+		tag = tag.toLowerCase();
 		// This will just return the existing tag object.
 		const tagDetails = await this.createTag(tag);
 		// Unless we provided the current object, get the current object.
@@ -277,6 +285,7 @@ const RadarrAPI = {
 	getMediaItemForTMDBId: async function (
 		tmdbId: number
 	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.getMediaItemForTMDBId");
 		// Get the Radarr item from the TMDB ID, so we can use the Radarr ID.
 		const items = await this.getMediaItems(tmdbId);
 		const item: RadarrMediaDetails = _.find(
@@ -299,6 +308,7 @@ const RadarrAPI = {
 	getMediaItems: async function (
 		tmdbId?: number
 	): Promise<Array<RadarrMediaDetails>> {
+		this.debug("RadarrAPI.getMediaItems");
 		const request: Dictionary = {
 			url: "/movie"
 		};
@@ -315,6 +325,7 @@ const RadarrAPI = {
 	 * @return {Promise<RadarrMediaDetails>} Returns the details of the media item.
 	 */
 	getMediaItem: async function (itemId: number): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.getMediaItem");
 		const data = await this.callApi({
 			url: "/movie/" + itemId
 		});
@@ -333,6 +344,7 @@ const RadarrAPI = {
 		itemId: number,
 		options: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
+		this.debug("RadarrAPI.updateMediaItem");
 		const data = await this.callApi({
 			url: "/movie/" + itemId,
 			method: "put",
@@ -354,6 +366,7 @@ const RadarrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("RadarrAPI.callApi");
 		if (!process.env.RADARR_URL || !process.env.RADARR_API_KEY) {
 			throw error(
 				"Missing .env file containing RADARR_URL and/or RADARR_API_KEY. See README.md"

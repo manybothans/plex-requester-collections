@@ -71,6 +71,7 @@ const PlexAPI = {
 	 * @return {Promise<Dictionary>} Object containing details about the Plex server, including the Plex server MachineID.
 	 */
 	getCapabilities: async function (): Promise<Dictionary> {
+		this.debug("PlexAPI.getCapabilities");
 		const data = await this.callApi({ url: "/" });
 		this.debug(data);
 		return data;
@@ -84,6 +85,7 @@ const PlexAPI = {
 	 * @return {Promise<string>} Promise resolving to the string Machine ID.
 	 */
 	getMachineId: async function (): Promise<string> {
+		this.debug("PlexAPI.getMachineId");
 		if (!this.MachineId) {
 			const data = await this.getCapabilities();
 
@@ -109,6 +111,7 @@ const PlexAPI = {
 	 * @return {number} The corresponding number code for the given Plex item type string. Codes contained in PlexTypes ENUM.
 	 */
 	getPlexTypeCode: function (typeString: string): number {
+		this.debug("PlexAPI.getPlexTypeCode");
 		switch (typeString) {
 			case "show":
 				return PlexTypes.SERIES;
@@ -125,6 +128,7 @@ const PlexAPI = {
 	 * @return {Promise<Array<Dictionary>>} An array containing all the library sections on the Plex server, from a nested portion of the HTTP response data object.
 	 */
 	getSections: async function (): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getSections");
 		const data = await this.callApi({ url: "/library/sections" });
 		const sections =
 			data && data.MediaContainer && data.MediaContainer.Directory
@@ -143,6 +147,7 @@ const PlexAPI = {
 	getCollections: async function (
 		sectionId: number
 	): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getCollections");
 		const data = await this.callApi({
 			url: `/library/sections/${sectionId}/collections`,
 			params: {
@@ -173,6 +178,7 @@ const PlexAPI = {
 	createSmartCollection: async function (
 		options: PlexCollectionOptions
 	): Promise<Dictionary> {
+		this.debug("PlexAPI.createSmartCollection");
 		const machineId = await PlexAPI.getMachineId();
 		options.sort = options.sort ? options.sort : "titleSort";
 		options.smart = 1; //Force smart collections only for this method
@@ -226,6 +232,7 @@ const PlexAPI = {
 	 * @return {Promise<Array<Dictionary>>} An array containing all the user account objects on the Plex server, from a nested portion of the HTTP response data object.
 	 */
 	getAccounts: async function (): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getAccounts");
 		const data = await this.callApi({ url: "/accounts" });
 		const accounts =
 			data && data.MediaContainer && data.MediaContainer.Account
@@ -242,6 +249,7 @@ const PlexAPI = {
 	 * @return {Promise<Dictionary>} The account object corresponding to the provided account ID, from a nested portion of the HTTP response data object.
 	 */
 	getSingleAccount: async function (accountId: number): Promise<Dictionary> {
+		this.debug("PlexAPI.getSingleAccount");
 		const data = await this.callApi({ url: "/accounts/" + accountId });
 		const account =
 			data &&
@@ -261,6 +269,7 @@ const PlexAPI = {
 	 * @return {Promise<Array<Dictionary>>} An array containing all existing labels and their keys in a given Plex library section, from a nested portion of the HTTP response data object.
 	 */
 	getLabels: async function (sectionId: number): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getLabels");
 		const data = await this.callApi({
 			url: `/library/sections/${sectionId}/label`
 		});
@@ -290,6 +299,8 @@ const PlexAPI = {
 		sectionId: number,
 		label: string
 	): Promise<number> {
+		this.debug("PlexAPI.getKeyForLabel");
+		label = label.toLowerCase();
 		if (!this.Labels) {
 			await this.getLabels(sectionId);
 		}
@@ -319,6 +330,8 @@ const PlexAPI = {
 		itemId: number,
 		label: string
 	): Promise<undefined> {
+		this.debug("PlexAPI.addLabelToItem");
+		label = label.toLowerCase();
 		const result = await this.updateItemDetails(sectionId, itemId, {
 			"label[0].tag.tag": label,
 			"label.locked": 1,
@@ -347,6 +360,8 @@ const PlexAPI = {
 		itemId: number,
 		label: string
 	): Promise<undefined> {
+		this.debug("PlexAPI.removeLabelFromItem");
+		label = label.toLowerCase();
 		const result = await this.updateItemDetails(sectionId, itemId, {
 			"label[].tag.tag-": label,
 			"label.locked": 1,
@@ -369,6 +384,7 @@ const PlexAPI = {
 	getAllItems: async function (
 		sectionId: number
 	): Promise<Array<Dictionary>> {
+		this.debug("PlexAPI.getAllItems");
 		const data = await this.callApi({
 			url: `/library/sections/${sectionId}/all`
 		});
@@ -396,6 +412,7 @@ const PlexAPI = {
 		itemId: number,
 		updates: Dictionary
 	): Promise<Dictionary> {
+		this.debug("PlexAPI.updateItemDetails");
 		updates = updates || {};
 		updates.type = updates.type || PlexTypes.MOVIE;
 		updates.id = itemId;
@@ -419,6 +436,7 @@ const PlexAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("PlexAPI.callApi");
 		if (!process.env.PLEX_URL || !process.env.PLEX_TOKEN) {
 			throw error(
 				"Missing .env file containing PLEX_URL and/or PLEX_TOKEN. See README.md"

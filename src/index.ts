@@ -212,6 +212,19 @@ const app = async function () {
 				}
 				// If they haven't finished watching it, is it a stale request?
 				else {
+					// Remove Watched tag in case it was added in a previous session erroneously (Maybe needed more for TV shows, but what the heck).
+					radarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrItem.id,
+						TAG_REQUESTER_WATCHED,
+						radarrItem
+					);
+					// Remove the existing Stale tag in case they started watching it since last session.
+					radarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrItem.id,
+						TAG_STALE_REQUEST,
+						radarrItem
+					);
+					// When was the last time the requester watched this?
 					const lastWatchedDate =
 						filteredHistories && filteredHistories.length
 							? filteredHistories[0].date
@@ -304,6 +317,20 @@ const app = async function () {
 				}
 				// If they haven't finished watching it, is it a stale request?
 				else {
+					// Remove Watched tag in case it was added in a previous session (e.g. maybe they were finished before, but new episodes came out.).
+					sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						sonarrItem.id,
+						TAG_REQUESTER_WATCHED,
+						sonarrItem
+					);
+					// Remove the existing Stale tag in case they started watching it since last session.
+					sonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						sonarrItem.id,
+						TAG_STALE_REQUEST,
+						sonarrItem
+					);
+
+					// When was the last time the requester watched this?
 					const lastWatchedDate =
 						filteredHistories && filteredHistories.length
 							? filteredHistories[0].date

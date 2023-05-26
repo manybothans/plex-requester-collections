@@ -117,6 +117,7 @@ const OverseerrAPI = {
 	 * @return {Promise<Dictionary>} Object containing status of Overseerr instance.
 	 */
 	getStatus: async function (): Promise<Dictionary> {
+		this.debug("OverseerrAPI.getStatus");
 		const data = await this.callApi({ url: "/status" });
 		this.debug(data);
 		return data;
@@ -135,6 +136,7 @@ const OverseerrAPI = {
 	getPaginatedRequests: async function (
 		params: OverseerrPaginationOptions = <OverseerrPaginationOptions>{}
 	): Promise<Dictionary> {
+		this.debug("OverseerrAPI.getPaginatedRequests");
 		params.take = params.take || PAGINATION_MAX_SIZE; // Max number of items returned per page
 		params.skip = params.skip || 0; // "skip" is number of items, not pages.
 		params.filter = params.filter || "available"; // Available values : all, approved, available, pending, processing, unavailable, failed
@@ -157,6 +159,7 @@ const OverseerrAPI = {
 	getAllRequests: async function (
 		filter = "available"
 	): Promise<Array<OverseerrRequestDetails>> {
+		this.debug("OverseerrAPI.getAllRequests");
 		let data = await this.getPaginatedRequests({
 			filter: filter,
 			skip: 0,
@@ -230,6 +233,7 @@ const OverseerrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("OverseerrAPI.callApi");
 		if (!process.env.OVERSEERR_URL || !process.env.OVERSEERR_API_KEY) {
 			throw error(
 				"Missing .env file containing OVERSEERR_URL and/or OVERSEERR_API_KEY. See README.md"

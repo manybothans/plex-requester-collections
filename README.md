@@ -1,8 +1,8 @@
 # Plex Requester Collections
 
-This app automatically creates Collections in Plex Media Server for the content that each user requests in the media request management system Overseerr. It will add a label to all TV Shows and Movies in Plex that a user has requested in Overseerr, using the label format `requester:plex_username`. It will also create Smart Collections for each user containing their requested items. The collections will have labels in the format `owner:plex_username`, which you can use to create sharing restrictions if desired, for example for personalized home screens (need to figure this out).
+This app will tag your media in Plex, Radarr, and Sonarr with the username of the person who requested the media in Overseerr. To assist with library pruning, it can also connect to Tautulli and tag media in Radarr/Sonarr when the requester has fully watched it, or if the requester hasn't watched after a long time.
 
-If you optionally provide Radarr, Sonarr, and Tautulli connection details in the `.env` file, then the app will also tag items in Radarr/Sonarr with the requester Plex username in the format `requester:plex_username`. If Tautulli shows that the requester has fully watched the item, it will also tag the item in Radarr/Sonarr with `requester_watched` (useful for library pruning). If Overseerr shows that the media item was available over 6 months ago, and Tautulli shows that the requester last watched the item over 3 months ago and didn't finish, then the tag `stale_request` will be added to the item in Radarr/Sonarr.
+Read the [Logic Explained](#logic-explained) section below for a detailed explanation of how this is done.
 
 The process will go through once at start, then repeat every 24 hours. Make sure the services you're connecting to are already running. ;)
 
@@ -11,7 +11,6 @@ The process will go through once at start, then repeat every 24 hours. Make sure
 -   Get working with Plex Meta Manager.
 -   End goal is to have a Netflix-style recommendation algorithm for my users.
 -   Add support for users who modify requests, or who haven't requested by are actively watching the content.
--   Add support for removing tags if state changes.
 -   Figure out how to have personalized Plex home screens, different by user.
 
 #### Limitations
@@ -90,6 +89,20 @@ Run the Docker image with:
 ```bash
 docker-compose up -d -f /path/to/docker-compose.yml
 ```
+
+## [Logic Explained](#logic-explained)
+
+-   Plex and Overseerr connection details are required, but Radarr, Sonarr, and Tautulli connection details are optional.
+    -   If Radarr and/or Sonarr connection details are provided, then Tautulli connection details are required as well.
+-   If a user requests an item in Overseerr, tag the item in Plex with `requester:plex_username`.
+-   Unless the environment variable `FEATURE_CREATE_COLLECTIONS` is set to `0`, also create smart collections in Plex for each requester that include the tagged media items, and tag the collection with `owner:plex_username`. These collections will have titles such as `Movies Requested by plex_username` or `TV Shows Requested by plex_username`, and the Sort Titles will have the prefix `zzz_` so the collections appear at the bottom of the list.
+-   If Tautulli and Radarr/Sonarr connection details are set in environment variables:
+    -   If a user requests an item in Overseerr, tag the item in Radarr/Sonarr with `requester:plex_username`.
+    -   If Tautulli shows that the requester user has fully watched an item, tag the item in Radarr/Sonarr with `requester_watched`.
+        -   If Tautulli later shows that the requester has no longer fully watched an item (e.g. they had finished a show but new episodes were added), remove the `requester_watched` tag from the item in Radarr/Sonarr.
+    -   If Overseerr shows that a requested media item was downloaded over 6 months ago, and Tautulli shows that the requester user hasn't watched the item in over 3 months, tag item in Radarr/Sonarr with `stale_request`.
+        -   If Tautulli later shows that the requester user has started watching the item, remove the `stale_request` tag from item in Radarr/Sonarr.
+-   The process will run once at start, then repeat every 24 hours, unless the environment variable `FEATURE_RUN_ONCE` is set to `1` in which case it will run through once then exit.
 
 ## Contributing
 

@@ -103,6 +103,7 @@ const SonarrAPI = {
 	 * @return {Promise<Array<Dictionary>>} Returns the health status of the Radarr server instance.
 	 */
 	getHealth: async function (): Promise<Array<Dictionary>> {
+		this.debug("SonarrAPI.getHealth");
 		const data = await this.callApi({ url: "/health" });
 		this.debug(data);
 		return data;
@@ -113,6 +114,7 @@ const SonarrAPI = {
 	 * @return {Promise<Array<SonarrTag>>} Returns the list of tags from the server.
 	 */
 	getTags: async function (): Promise<Array<SonarrTag>> {
+		this.debug("SonarrAPI.getTags");
 		this.Tags = await this.callApi({ url: "/tag" });
 		if (!_.isArray(this.Tags)) {
 			this.Tags = undefined;
@@ -131,6 +133,8 @@ const SonarrAPI = {
 	 * @return {Promise<SonarrTag>} Returns the label and ID of the new tag.
 	 */
 	createTag: async function (tag: string): Promise<SonarrTag> {
+		this.debug("SonarrAPI.createTag");
+		tag = tag.toLowerCase();
 		if (!this.Tags) {
 			await this.getTags();
 		}
@@ -165,6 +169,8 @@ const SonarrAPI = {
 		tag: string,
 		mediaObject?: SonarrSeriesDetails
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.addTagToMediaItem");
+		tag = tag.toLowerCase();
 		const tagDetails = await this.createTag(tag);
 		const mediaDetails = mediaObject
 			? mediaObject
@@ -191,6 +197,8 @@ const SonarrAPI = {
 		tag: string,
 		mediaObject?: SonarrSeriesDetails
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.removeTagFromMediaItem");
+		tag = tag.toLowerCase();
 		// This will just return the existing tag object.
 		const tagDetails = await this.createTag(tag);
 		// Unless we provided the current object, get the current object.
@@ -214,6 +222,7 @@ const SonarrAPI = {
 	getMediaItemForTVDBId: async function (
 		tvdbId: number
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.getMediaItemForTVDBId");
 		// Get the Radarr item from the TVDB ID, so we can use the Radarr ID.
 		const items = await this.getMediaItems(tvdbId);
 		const item: SonarrSeriesDetails = _.find(
@@ -236,6 +245,7 @@ const SonarrAPI = {
 	getMediaItems: async function (
 		tvdbId?: number
 	): Promise<Array<SonarrSeriesDetails>> {
+		this.debug("SonarrAPI.getMediaItems");
 		const request: Dictionary = {
 			url: "/series"
 		};
@@ -254,6 +264,7 @@ const SonarrAPI = {
 	getMediaItem: async function (
 		itemId: number
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.getMediaItem");
 		const data = await this.callApi({
 			url: "/series/" + itemId
 		});
@@ -272,6 +283,7 @@ const SonarrAPI = {
 		itemId: number,
 		options: SonarrSeriesDetails
 	): Promise<SonarrSeriesDetails> {
+		this.debug("SonarrAPI.updateMediaItem");
 		const data = await this.callApi({
 			url: "/series/" + itemId,
 			method: "put",
@@ -293,6 +305,7 @@ const SonarrAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("SonarrAPI.callApi");
 		if (!process.env.SONARR_URL || !process.env.SONARR_API_KEY) {
 			throw error(
 				"Missing .env file containing SONARR_URL and/or SONARR_API_KEY. See README.md"

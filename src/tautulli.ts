@@ -189,6 +189,7 @@ const TautulliAPI = {
 	 * @return {Promise<string>} Arnold quote.
 	 */
 	arnold: async function (): Promise<string> {
+		this.debug("TautulliAPI.arnold");
 		const data = await this.callApi({
 			params: {
 				cmd: "arnold"
@@ -209,6 +210,7 @@ const TautulliAPI = {
 	getPaginatedHistory: async function (
 		searchOptions: TautulliHistoryRequestOptions
 	): Promise<TautulliPaginatedResults> {
+		this.debug("TautulliAPI.getPaginatedHistory");
 		// Default sort to Date Descending
 		searchOptions.order_column = searchOptions.order_column || "date";
 		searchOptions.order_dir = searchOptions.order_dir || "desc";
@@ -243,6 +245,7 @@ const TautulliAPI = {
 	getAllHistory: async function (
 		searchOptions: TautulliHistoryRequestOptions
 	): Promise<Array<TautulliHistoryDetails>> {
+		this.debug("TautulliAPI.getAllHistory");
 		searchOptions.length = PAGINATION_MAX_SIZE;
 		searchOptions.start = 0;
 
@@ -307,6 +310,7 @@ const TautulliAPI = {
 	callApi: async function (
 		requestObj: AxiosRequestConfig
 	): Promise<Dictionary> {
+		this.debug("TautulliAPI.callApi");
 		if (!process.env.TAUTULLI_URL || !process.env.TAUTULLI_API_KEY) {
 			throw error(
 				"Missing .env file containing TAUTULLI_URL and/or TAUTULLI_API_KEY. See README.md"
