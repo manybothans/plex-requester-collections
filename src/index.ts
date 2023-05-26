@@ -86,6 +86,7 @@ const app = async function () {
 			// Init some values we're going to need.
 			const mediaId = parseInt(<string>mediaItem.ratingKey);
 			const plexUsername = request?.requestedBy?.plexUsername;
+			const displayName = request?.requestedBy?.displayName;
 
 			// Print to console.
 			console.log(`${mediaItem.title} requested by ${plexUsername}`);
@@ -102,16 +103,25 @@ const app = async function () {
 			// Feature flag to turn off the creation of smart collections.
 			if (process.env.FEATURE_CREATE_COLLECTIONS !== "0") {
 				// This is what the smart collection should be called.
-				const collectionTitle =
-					sectionType == "movie"
-						? COLL_TITLE_PREFIX_MOVIE + plexUsername
-						: COLL_TITLE_PREFIX_SHOW + plexUsername;
+				let collectionTitle;
+				if (displayName) {
+					collectionTitle =
+						sectionType == "movie"
+							? COLL_TITLE_PREFIX_MOVIE + displayName
+							: COLL_TITLE_PREFIX_SHOW + displayName;
+				} else {
+					collectionTitle =
+						sectionType == "movie"
+							? COLL_TITLE_PREFIX_MOVIE + plexUsername
+							: COLL_TITLE_PREFIX_SHOW + plexUsername;
+				}
 
 				// Does the smart collection already exist?
 				const collection = _.find(
 					collections,
 					(item) => item?.title === collectionTitle
 				);
+
 				// If collection exists with this title, assume it's set up correctly and we don't need to do anything else.
 				// If collection does not exist with this title, create it and tag is with owner label.
 				if (!collection) {
@@ -131,6 +141,7 @@ const app = async function () {
 							sort: COLL_DEFAULT_SORT, //date added descending
 							query: "label=" + mediaLabelKey
 						});
+
 					// Only continue if creating the collection seems to have worked.
 					if (createCollResult) {
 						await PlexAPI.addLabelToItem(
