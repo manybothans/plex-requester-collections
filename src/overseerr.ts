@@ -1,5 +1,5 @@
 /**
- * Contains all the methods required to interact with Overseerr request managemenet API, as it relates to this project.
+ * Contains all the methods required to interact with Overseerr request management API, as it relates to this project.
  *
  * @author Jess Latimer @manybothans
  *
@@ -103,7 +103,7 @@ interface OverseerrRequestDetails {
 }
 
 /**
- * Defualt max number of results to return per page.
+ * Default max number of results to return per page.
  */
 const PAGINATION_MAX_SIZE = 100;
 
@@ -130,7 +130,7 @@ const OverseerrAPI = {
 	 *
 	 * @param {OverseerrPaginationOptions} params - Pagination options for the request. See Type Definition for details.
 	 *
-	 * @return {Promise<Dictionary>} The data portion of the HTTP response, containing info on the returned page of results and the page of resuts themselves.
+	 * @return {Promise<Dictionary>} The data portion of the HTTP response, containing info on the returned page of results and the page of results themselves.
 	 */
 	getPaginatedRequests: async function (
 		params: OverseerrPaginationOptions = <OverseerrPaginationOptions>{}

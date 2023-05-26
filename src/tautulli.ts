@@ -172,7 +172,7 @@ interface TautulliPaginatedResults {
 }
 
 /**
- * Defualt max number of results to return per page.
+ * Default max number of results to return per page.
  */
 const PAGINATION_MAX_SIZE = 100;
 

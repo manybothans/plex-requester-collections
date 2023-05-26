@@ -11,14 +11,14 @@ import moment from "moment";
 
 const TAG_STALE_REQUEST = "stale_request";
 const TAG_REQUESTER_WATCHED = "requester_watched";
-const TAG_PREFEX_REQUESTER = "requester:";
+const TAG_PREFIX_REQUESTER = "requester:";
 const TAG_PREFIX_OWNER = "owner:";
 const COLL_SORT_PREFIX = "zzz_";
 const COLL_DEFAULT_SORT = encodeURIComponent("addedAt:desc");
 const COLL_TITLE_PREFIX_MOVIE = "Movies Requested by ";
 const COLL_TITLE_PREFIX_SHOW = "TV Shows Requested by ";
-const STALE_ADDEDDATE_THRESHOLD = moment().subtract(6, "months");
-const STALE_VIEWDATE_THRESHOLD = moment().subtract(3, "months");
+const STALE_ADDED_DATE_THRESHOLD = moment().subtract(6, "months");
+const STALE_VIEW_DATE_THRESHOLD = moment().subtract(3, "months");
 
 const app = async function () {
 	// Get all the requests from Overseerr.
@@ -89,7 +89,7 @@ const app = async function () {
 			console.log(`${mediaItem.title} requested by ${plexUsername}`);
 
 			// Tag the media item.
-			const requesterTagValue = TAG_PREFEX_REQUESTER + plexUsername;
+			const requesterTagValue = TAG_PREFIX_REQUESTER + plexUsername;
 			await PlexAPI.addLabelToItem(
 				sectionId,
 				PlexAPI.getPlexTypeCode(sectionType),
@@ -113,7 +113,7 @@ const app = async function () {
 				// If collection exists with this title, assume it's set up correctly and we don't need to do anything else.
 				// If collection does not exist with this title, create it and tag is with owner label.
 				if (!collection) {
-					// Get the numberic ID of the label we're using right now.
+					// Get the numeric ID of the label we're using right now.
 					const mediaLabelKey = await PlexAPI.getKeyForLabel(
 						sectionId,
 						requesterTagValue
@@ -150,7 +150,7 @@ const app = async function () {
 			}
 
 			// Now let's start looking at watch history and Radarr/Sonarr.
-			// Only continue if we have the right creds.
+			// Only continue if we have the right credentials.
 
 			// Handle Radarr items.
 			if (
@@ -220,8 +220,8 @@ const app = async function () {
 					// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
 					if (
 						moment(request.media?.mediaAddedAt) <
-							STALE_ADDEDDATE_THRESHOLD &&
-						moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
+							STALE_ADDED_DATE_THRESHOLD &&
+						moment(lastWatchedDate) < STALE_VIEW_DATE_THRESHOLD
 					) {
 						radarrItem = await RadarrAPI.addTagToMediaItem(
 							radarrItem.id,
@@ -286,7 +286,7 @@ const app = async function () {
 					"rating_key"
 				);
 
-				// Has the user watched all the epsiodes, and have all the current episodes been downloaded?
+				// Has the user watched all the episodes, and have all the current episodes been downloaded?
 				if (
 					uniqueEpisodeHistories?.length ===
 						sonarrItem?.statistics?.episodeCount &&
@@ -312,8 +312,8 @@ const app = async function () {
 					// If the media item was downloaded more than 6 months ago, and the requester hasn't watched in the last 3 months, tag it as stale.
 					if (
 						moment(request.media?.mediaAddedAt) <
-							STALE_ADDEDDATE_THRESHOLD &&
-						moment(lastWatchedDate) < STALE_VIEWDATE_THRESHOLD
+							STALE_ADDED_DATE_THRESHOLD &&
+						moment(lastWatchedDate) < STALE_VIEW_DATE_THRESHOLD
 					) {
 						sonarrItem = await SonarrAPI.addTagToMediaItem(
 							sonarrItem.id,

@@ -157,7 +157,7 @@ interface RadarrMediaDetails {
  */
 const RadarrAPI = {
 	/**
-	 * @property {Array<RadarrTag} Tags - Cached list of all tags in Radarr.
+	 * @property {Array<RadarrTag>} Tags - Cached list of all tags in Radarr.
 	 */
 	Tags: undefined,
 	/**
@@ -215,10 +215,11 @@ const RadarrAPI = {
 	 * Helper function to add a tag to a media item.
 	 *
 	 * @remark
-	 * This results in 3 different API calls.
+	 * This can results in 3 different API calls.
 	 *
 	 * @param {number} itemId - The ID of the media item you want.
 	 * @param {string} tag - The string label of the tag you want to add.
+	 * @param {RadarrMediaDetails} mediaObject - (Optional) The current media details before updating, to reduce calls.
 	 *
 	 * @return {Promise<RadarrMediaDetails>} The details of the updated media item.
 	 */
@@ -227,12 +228,42 @@ const RadarrAPI = {
 		tag: string,
 		mediaObject?: RadarrMediaDetails
 	): Promise<RadarrMediaDetails> {
-		const tagDetails = await RadarrAPI.createTag(tag);
+		const tagDetails = await this.createTag(tag);
 		const movieDetails = mediaObject
 			? mediaObject
-			: await RadarrAPI.getMediaItem(itemId);
+			: await this.getMediaItem(itemId);
 		movieDetails.tags = _.union(movieDetails.tags, [tagDetails?.id]);
-		const result = RadarrAPI.updateMediaItem(itemId, movieDetails);
+		const result = this.updateMediaItem(itemId, movieDetails);
+		this.debug(result);
+		return result;
+	},
+	/**
+	 * Helper function to remove a tag from a media item.
+	 *
+	 * @remark
+	 * This can results in 3 different API calls.
+	 *
+	 * @param {number} itemId - The ID of the media item you want.
+	 * @param {string} tag - The string label of the tag you want to remove.
+	 * @param {RadarrMediaDetails} mediaObject - (Optional) The current media details before updating, to reduce calls.
+	 *
+	 * @return {Promise<RadarrMediaDetails>} The details of the updated media item.
+	 */
+	removeTagFromMediaItem: async function (
+		itemId: number,
+		tag: string,
+		mediaObject?: RadarrMediaDetails
+	): Promise<RadarrMediaDetails> {
+		// This will just return the existing tag object.
+		const tagDetails = await this.createTag(tag);
+		// Unless we provided the current object, get the current object.
+		const movieDetails = mediaObject
+			? mediaObject
+			: await this.getMediaItem(itemId);
+		// Remove the tag.
+		_.pull(movieDetails.tags, tagDetails?.id);
+		// Save changes to server.
+		const result = this.updateMediaItem(itemId, movieDetails);
 		this.debug(result);
 		return result;
 	},
@@ -256,7 +287,7 @@ const RadarrAPI = {
 		return item;
 	},
 	/**
-	 * Get all the media items, or get a single media item matching a TMBD ID.
+	 * Get all the media items, or get a single media item matching a TMDB ID.
 	 *
 	 * @remark
 	 * This is useful to translate a TMDB ID from Overseerr or Plex to a Radarr ID, which is needed for updating a media item.
