@@ -1,6 +1,6 @@
 {
 	"name": "plex-requester-collections",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"description": "Node app to automatically create Plex Collections for content requested by users in Overseerr.",
 	"main": "dist/index.js",
 	"scripts": {

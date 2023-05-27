@@ -51,7 +51,7 @@ interface SonarrRatings {
 	votes: number;
 	value: number;
 }
-interface SonarrSeriesDetails {
+export interface SonarrSeriesDetails {
 	title: string;
 	alternateTitles: Array<SonarrAltTitles>;
 	sortTitle: string;

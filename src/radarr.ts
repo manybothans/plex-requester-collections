@@ -111,7 +111,7 @@ interface RadarrCollection {
 	added: string;
 	id: number;
 }
-interface RadarrMediaDetails {
+export interface RadarrMediaDetails {
 	title: string;
 	originalTitle: string;
 	originalLanguage: RadarrLanguage;

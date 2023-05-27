@@ -50,6 +50,167 @@ interface PlexCollectionOptions {
 	query: string;
 }
 
+interface PlexTag {
+	id?: number;
+	filter?: string;
+	tag?: string;
+	tagKey?: string;
+	role?: string;
+	thumb?: string;
+}
+
+interface PlexGuidObj {
+	id: string;
+}
+
+interface PlexSetting {
+	id?: string;
+	label?: string;
+	summary?: string;
+	type?: string;
+	default?: string;
+	value?: string;
+	hidden?: boolean;
+	advanced?: boolean;
+	group?: string;
+	enumValues?: string;
+}
+
+interface PlexPreferences {
+	Setting?: Array<PlexSetting>;
+}
+
+interface PlexRating {
+	image?: string;
+	value?: number;
+	type?: string;
+}
+
+interface PlexField {
+	locked?: boolean;
+	name?: string;
+}
+
+interface PlexLocation {
+	path?: string;
+}
+
+interface PlexStream {
+	id?: number;
+	streamType?: number;
+	default?: boolean;
+	codec?: string;
+	index?: number;
+	bitrate?: number;
+	language?: string;
+	languageTag?: string;
+	languageCode?: string;
+	bitDepth?: number;
+	chromaLocation?: string;
+	chromaSubsampling?: string;
+	codedHeight?: number;
+	codedWidth?: number;
+	colorPrimaries?: string;
+	colorRange?: string;
+	colorSpace?: string;
+	colorTrc?: string;
+	frameRate?: number;
+	hasScalingMatrix?: boolean;
+	height?: number;
+	level?: number;
+	original?: boolean;
+	profile?: string;
+	refFrames?: number;
+	scanType?: string;
+	width?: number;
+	displayTitle?: string;
+	extendedDisplayTitle?: string;
+}
+
+interface PlexMediaParts {
+	id?: number;
+	key?: string;
+	duration?: number;
+	file?: string;
+	size?: number;
+	container?: string;
+	videoProfile?: string;
+	Stream?: Array<PlexStream>;
+}
+
+interface PlexMedia {
+	id?: number;
+	duration?: number;
+	bitrate?: number;
+	width?: number;
+	height?: number;
+	aspectRatio?: number;
+	audioChannels?: number;
+	audioCodec?: string;
+	videoCodec?: string;
+	videoResolution?: string;
+	container?: string;
+	videoFrameRate?: string;
+	videoProfile?: string;
+	title?: string;
+	Part?: Array<PlexMediaParts>;
+}
+
+interface PlexExtras {
+	size?: number;
+	Metadata?: Array<PlexMediaDetails>;
+}
+
+interface PlexOnDeck {
+	Metadata?: PlexMediaDetails;
+}
+
+export interface PlexMediaDetails {
+	ratingKey: string;
+	key?: string;
+	parentRatingKey?: string;
+	grandparentRatingKey?: string;
+	guid?: string;
+	studio?: string;
+	type?: string;
+	title?: string;
+	grandparentTitle?: string;
+	parentTitle?: string;
+	librarySectionTitle?: string;
+	librarySectionID?: number;
+	librarySectionKey?: string;
+	contentRating?: string;
+	summary?: string;
+	index?: number;
+	audienceRating?: number;
+	year?: number;
+	tagline?: string;
+	thumb?: string;
+	art?: string;
+	duration?: number;
+	originallyAvailableAt?: string;
+	leafCount?: number;
+	viewedLeafCount?: number;
+	childCount?: number;
+	addedAt?: number;
+	updatedAt?: number;
+	audienceRatingImage?: string;
+	primaryExtraKey?: string;
+	Genre?: Array<PlexTag>;
+	Country?: Array<PlexTag>;
+	Guid?: Array<PlexGuidObj>;
+	Rating?: Array<PlexRating>;
+	Collection?: Array<PlexTag>;
+	Role?: Array<PlexTag>;
+	Label?: Array<PlexTag>;
+	Field?: Array<PlexField>;
+	Location?: Array<PlexLocation>;
+	Preferences?: PlexPreferences;
+	Media?: Array<PlexMedia>;
+	OnDeck?: PlexOnDeck;
+	Extras?: PlexExtras;
+}
+
 /**
  * This is the top-level PlexAPI singleton object.
  */
@@ -377,6 +538,29 @@ const PlexAPI = {
 	/**
 	 * Returns an array of all the top-level media items (Movies or TV Shows) in a given Section AKA Library.
 	 *
+	 * @param {number} itemId - The numeric ID of the Plex media item we want.
+	 *
+	 * @return {Promise<PlexMediaDetails>} The details of the Plex media item we want.
+	 */
+	getSingleItem: async function (itemId: number): Promise<PlexMediaDetails> {
+		this.debug("PlexAPI.getSingleItem");
+		const data = await this.callApi({
+			url: `/library/metadata/${itemId}`
+		});
+		// this.debug(data);
+		const item =
+			data &&
+			data.MediaContainer &&
+			data.MediaContainer.Metadata &&
+			data.MediaContainer.Metadata.length
+				? <PlexMediaDetails>_.first(data.MediaContainer.Metadata)
+				: undefined;
+		this.debug(item);
+		return item;
+	},
+	/**
+	 * Returns an array of all the top-level media items (Movies or TV Shows) in a given Section AKA Library.
+	 *
 	 * @param {number} sectionId - The numeric ID of the Plex library section we working in.
 	 *
 	 * @return {Promise<Array<Dictionary>>} An array containing all the media items in a given Plex library section, from a nested portion of the HTTP response data object.
@@ -574,4 +758,616 @@ type=18&id=38010&includeExternalMedia=1&titleSort.value=%21000_Poop&titleSort.lo
 delete collection
 /library/collections/38023
 DELETE
+*/
+
+/*
+MOVIE
+/library/metadata/37906
+GET
+
+includeConcerts=1&
+includeExtras=1&
+includeOnDeck=1&
+includePopularLeaves=1&
+includePreferences=1&
+includeReviews=1&
+includeChapters=1&
+includeStations=1&
+includeExternalMedia=1&
+asyncAugmentMetadata=1&
+asyncCheckFiles=1&
+asyncRefreshAnalysis=1&
+asyncRefreshLocalMediaAgent=1&
+
+
+{
+    "MediaContainer": {
+        "size": 1,
+        "allowSync": true,
+        "augmentationKey": "/library/metadata/augmentations/68",
+        "identifier": "com.plexapp.plugins.library",
+        "librarySectionID": 1,
+        "librarySectionTitle": "Movies",
+        "librarySectionUUID": "c6454fa1-f444-452c-a72d-673a2458876e",
+        "mediaTagPrefix": "/system/bundle/media/flags/",
+        "mediaTagVersion": 1684415019,
+        "Metadata": [
+            {
+                "ratingKey": "37906",
+                "key": "/library/metadata/37906",
+                "guid": "plex://movie/5f40c12886422500429bb3e7",
+                "studio": "STX Entertainment",
+                "type": "movie",
+                "title": "The Covenant",
+                "titleSort": "Covenant",
+                "librarySectionTitle": "Movies",
+                "librarySectionID": 1,
+                "librarySectionKey": "/library/sections/1",
+                "contentRating": "R",
+                "summary": "Guy Ritchie's The Covenant follows US Army Sergeant John Kinley (Jake Gyllenhaal) and Afghan interpreter Ahmed (Dar Salim). After an ambush, Ahmed goes to Herculean lengths to save Kinley's life. When Kinley learns that Ahmed and his family were not given safe passage to America as promised, he must repay his debt by returning to the war zone to retrieve them before the Taliban hunts them down first.",
+                "rating": 8.3,
+                "audienceRating": 9.8,
+                "year": 2023,
+                "tagline": "A bond. A pledge. A commitment.",
+                "thumb": "/library/metadata/37906/thumb/1683607994",
+                "art": "/library/metadata/37906/art/1683607994",
+                "duration": 7383328,
+                "originallyAvailableAt": "2023-04-19",
+                "addedAt": 1683607991,
+                "updatedAt": 1683607994,
+                "audienceRatingImage": "rottentomatoes://image.rating.upright",
+                "primaryExtraKey": "/library/metadata/37907",
+                "ratingImage": "rottentomatoes://image.rating.ripe",
+                "Media": [
+                    {
+                        "id": 73890,
+                        "duration": 7383328,
+                        "bitrate": 7229,
+                        "width": 1920,
+                        "height": 800,
+                        "aspectRatio": 2.35,
+                        "audioChannels": 6,
+                        "audioCodec": "eac3",
+                        "videoCodec": "h264",
+                        "videoResolution": "1080",
+                        "container": "mkv",
+                        "videoFrameRate": "24p",
+                        "videoProfile": "high",
+                        "title": "Original",
+                        "Part": [
+                            {
+                                "id": 96413,
+                                "key": "/library/parts/96413/1683606094/file.mkv",
+                                "duration": 7383328,
+                                "file": "/Media/Movies/Guy Ritchie's The Covenant (2023) [h264]/Guy Ritchie's The Covenant (2023) [WEBDL-1080p h264 EAC3].mkv",
+                                "size": 6673452259,
+                                "container": "mkv",
+                                "videoProfile": "high",
+                                "Stream": [
+                                    {
+                                        "id": 280047,
+                                        "streamType": 1,
+                                        "default": true,
+                                        "codec": "h264",
+                                        "index": 0,
+                                        "bitrate": 6589,
+                                        "language": "English",
+                                        "languageTag": "en",
+                                        "languageCode": "eng",
+                                        "bitDepth": 8,
+                                        "chromaLocation": "left",
+                                        "chromaSubsampling": "4:2:0",
+                                        "codedHeight": 800,
+                                        "codedWidth": 1920,
+                                        "colorPrimaries": "bt709",
+                                        "colorRange": "tv",
+                                        "colorSpace": "bt709",
+                                        "colorTrc": "bt709",
+                                        "frameRate": 23.976,
+                                        "hasScalingMatrix": false,
+                                        "height": 800,
+                                        "level": 40,
+                                        "original": true,
+                                        "profile": "high",
+                                        "refFrames": 4,
+                                        "scanType": "progressive",
+                                        "width": 1920,
+                                        "displayTitle": "1080p (H.264)",
+                                        "extendedDisplayTitle": "1080p (H.264)"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "Genre": [
+                    {
+                        "id": 4,
+                        "filter": "genre=4",
+                        "tag": "Action"
+                    }
+                ],
+                "Country": [
+                    {
+                        "id": 371,
+                        "filter": "country=371",
+                        "tag": "United Kingdom"
+                    }
+                ],
+                "Guid": [
+                    {
+                        "id": "imdb://tt4873118"
+                    },
+                    {
+                        "id": "tmdb://882569"
+                    },
+                    {
+                        "id": "tvdb://343900"
+                    }
+                ],
+                "Rating": [
+                    {
+                        "image": "imdb://image.rating",
+                        "value": 8,
+                        "type": "audience"
+                    }
+                ],
+                "Collection": [
+                    {
+                        "id": 137665,
+                        "filter": "collection=137665",
+                        "tag": "Plex Popular"
+                    }
+                ],
+                "Director": [
+                    {
+                        "id": 15828,
+                        "filter": "director=15828",
+                        "tag": "Guy Ritchie",
+                        "tagKey": "5d776826e6d55c002040af52",
+                        "thumb": "https://metadata-static.plex.tv/1/people/1368956f253ba87ded9ed9371ac8522c.jpg"
+                    }
+                ],
+                "Writer": [
+                    {
+                        "id": 15829,
+                        "filter": "writer=15829",
+                        "tag": "Guy Ritchie",
+                        "tagKey": "5d776826e6d55c002040af52",
+                        "thumb": "https://metadata-static.plex.tv/1/people/1368956f253ba87ded9ed9371ac8522c.jpg"
+                    }
+                ],
+                "Role": [
+                    {
+                        "id": 6954,
+                        "filter": "actor=6954",
+                        "tag": "Jake Gyllenhaal",
+                        "tagKey": "5d776825103a2d001f563c05",
+                        "role": "Sgt. John Kinley",
+                        "thumb": "https://metadata-static.plex.tv/2/people/2c5a6f78bffd95694fc0f7d9fefc6137.jpg"
+                    }
+                ],
+                "Producer": [
+                    {
+                        "id": 26579,
+                        "filter": "producer=26579",
+                        "tag": "Guy Ritchie",
+                        "tagKey": "5d776826e6d55c002040af52",
+                        "thumb": "https://metadata-static.plex.tv/1/people/1368956f253ba87ded9ed9371ac8522c.jpg"
+                    }
+                ],
+                "Review": [
+                    {
+                        "id": 267,
+                        "filter": "art=267",
+                        "tag": "Adam Graham",
+                        "text": "An oftentimes riveting war film which marks a new path for the 54-year-old filmmaker.",
+                        "image": "rottentomatoes://image.review.fresh",
+                        "link": "https://www.detroitnews.com/story/entertainment/movies/2023/04/19/review-guy-ritchies-the-covenant-a-gritty-hard-fought-war-film/70131648007/",
+                        "source": "Detroit News"
+                    }
+                ],
+                "Preferences": {
+                    "Setting": [
+                        {
+                            "id": "languageOverride",
+                            "label": "Metadata language",
+                            "summary": "Language to use for item metadata such as synopsis and title.",
+                            "type": "text",
+                            "default": "",
+                            "value": "",
+                            "hidden": false,
+                            "advanced": false,
+                            "group": "",
+                            "enumValues": ":Library default|ar-SA:Arabic (Saudi Arabia)|bg-BG:Bulgarian|ca-ES:Catalan|zh-CN:Chinese|zh-HK:Chinese (Hong Kong)|zh-TW:Chinese (Taiwan)|hr-HR:Croatian|cs-CZ:Czech|da-DK:Danish|nl-NL:Dutch|en-US:English|en-AU:English (Australia)|en-CA:English (Canada)|en-GB:English (UK)|et-EE:Estonian|fi-FI:Finnish|fr-FR:French|fr-CA:French (Canada)|de-DE:German|el-GR:Greek|he-IL:Hebrew|hi-IN:Hindi|hu-HU:Hungarian|id-ID:Indonesian|it-IT:Italian|ja-JP:Japanese|ko-KR:Korean|lv-LV:Latvian|lt-LT:Lithuanian|nb-NO:Norwegian Bokmål|fa-IR:Persian|pl-PL:Polish|pt-BR:Portuguese|pt-PT:Portuguese (Portugal)|ro-RO:Romanian|ru-RU:Russian|sk-SK:Slovak|es-ES:Spanish|es-MX:Spanish (Mexico)|sv-SE:Swedish|th-TH:Thai|tr-TR:Turkish|uk-UA:Ukrainian|vi-VN:Vietnamese"
+                        }
+                    ]
+                },
+                "Extras": {
+                    "size": 9,
+                    "Metadata": [
+                        {
+                            "ratingKey": "37907",
+                            "key": "/library/metadata/37907",
+                            "guid": "iva://api.internetvideoarchive.com/2.0/DataService/VideoAssets(395544)",
+                            "type": "clip",
+                            "title": "Guy Ritchie's The Covenant",
+                            "summary": "",
+                            "index": 1,
+                            "thumb": "/library/metadata/37907/thumb/1683607993",
+                            "primaryGuid": "plex://movie/5f40c12886422500429bb3e7",
+                            "subtype": "trailer",
+                            "duration": 155000,
+                            "addedAt": 1683607993,
+                            "extraType": 1,
+                            "Media": [
+                                {
+                                    "id": 73891,
+                                    "duration": 155000,
+                                    "bitrate": 5000,
+                                    "width": 1920,
+                                    "height": 1080,
+                                    "aspectRatio": 1.78,
+                                    "audioCodec": "aac",
+                                    "videoCodec": "h264",
+                                    "videoResolution": "1080",
+                                    "container": "mp4",
+                                    "optimizedForStreaming": 1,
+                                    "protocol": "mp4",
+                                    "premium": true,
+                                    "Part": [
+                                        {
+                                            "id": 95779,
+                                            "duration": 155000,
+                                            "container": "mp4",
+                                            "key": "/services/iva/assets/395544/video.mp4?fmt=4&bitrate=5000",
+                                            "Stream": [
+                                                {
+                                                    "id": 278163,
+                                                    "streamType": 2,
+                                                    "selected": true,
+                                                    "codec": "aac",
+                                                    "index": 1,
+                                                    "channels": 2,
+                                                    "language": "English",
+                                                    "languageTag": "en",
+                                                    "languageCode": "eng",
+                                                    "displayTitle": "English (AAC Stereo)",
+                                                    "extendedDisplayTitle": "English (AAC Stereo)"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
+*/
+
+/*
+TV SHOW
+
+/library/metadata/38970
+GET
+includeConcerts=1&includeExtras=1&includeOnDeck=1&includePopularLeaves=1&includePreferences=1&includeReviews=1&includeChapters=1&includeStations=1&includeExternalMedia=1&asyncAugmentMetadata=1&asyncCheckFiles=1&asyncRefreshAnalysis=1&asyncRefreshLocalMediaAgent=1&
+{
+    "MediaContainer": {
+        "size": 1,
+        "allowSync": true,
+        "augmentationKey": "/library/metadata/augmentations/71",
+        "identifier": "com.plexapp.plugins.library",
+        "librarySectionID": 2,
+        "librarySectionTitle": "TV Shows",
+        "librarySectionUUID": "0c4c327e-9602-44d9-a289-8017106e5f23",
+        "mediaTagPrefix": "/system/bundle/media/flags/",
+        "mediaTagVersion": 1684415019,
+        "Metadata": [
+            {
+                "ratingKey": "38970",
+                "key": "/library/metadata/38970/children",
+                "guid": "plex://show/63757550e94bac336ff65b16",
+                "studio": "Skydance Television",
+                "type": "show",
+                "title": "FUBAR",
+                "librarySectionTitle": "TV Shows",
+                "librarySectionID": 2,
+                "librarySectionKey": "/library/sections/2",
+                "contentRating": "TV-MA",
+                "summary": "A father and daughter have both been working as CIA Operatives for years, but each kept their involvement in the CIA hidden from the other, resulting in their entire relationship being a gigantic lie. Upon learning of each other's involvement in the CIA, the pair are forced to work together as partners, and against the backdrop of explosive action, and espionage, learn who each other really are.",
+                "index": 1,
+                "audienceRating": 7.4,
+                "year": 2023,
+                "tagline": "Heroes Don't Retire. They Reload.",
+                "thumb": "/library/metadata/38970/thumb/1685153013",
+                "art": "/library/metadata/38970/art/1685153013",
+                "duration": 3180000,
+                "originallyAvailableAt": "2023-05-25",
+                "leafCount": 8,
+                "viewedLeafCount": 0,
+                "childCount": 1,
+                "addedAt": 1685153009,
+                "updatedAt": 1685153013,
+                "audienceRatingImage": "themoviedb://image.rating",
+                "primaryExtraKey": "/library/metadata/38974",
+                "Genre": [
+                    {
+                        "id": 4,
+                        "filter": "genre=4",
+                        "tag": "Action"
+                    }
+                ],
+                "Country": [
+                    {
+                        "id": 34,
+                        "filter": "country=34",
+                        "tag": "United States of America"
+                    }
+                ],
+                "Guid": [
+                    {
+                        "id": "imdb://tt13064902"
+                    },
+                    {
+                        "id": "tmdb://221300"
+                    },
+                    {
+                        "id": "tvdb://427281"
+                    }
+                ],
+                "Rating": [
+                    {
+                        "image": "imdb://image.rating",
+                        "value": 6.7,
+                        "type": "audience"
+                    }
+                ],
+                "Collection": [
+                    {
+                        "id": 137674,
+                        "filter": "collection=137674",
+                        "tag": "TMDb Trending"
+                    }
+                ],
+                "Role": [
+                    {
+                        "id": 13,
+                        "filter": "actor=13",
+                        "tag": "Arnold Schwarzenegger",
+                        "tagKey": "5d776824151a60001f24a3be",
+                        "role": "Luke Brunner",
+                        "thumb": "https://metadata-static.plex.tv/f/people/f123e23f50c3e8b134364023d5f77237.jpg"
+                    }
+                ],
+                "Label": [
+                    {
+                        "id": 140154,
+                        "filter": "label=140154",
+                        "tag": "Requester:manybothans"
+                    }
+                ],
+                "Field": [
+                    {
+                        "locked": true,
+                        "name": "label"
+                    }
+                ],
+                "Location": [
+                    {
+                        "path": "/Media/TV Shows/FUBAR"
+                    }
+                ],
+                "Preferences": {
+                    "Setting": [
+                        {
+                            "id": "episodeSort",
+                            "label": "Episode sorting",
+                            "summary": "How to sort the episodes for this show.",
+                            "type": "text",
+                            "default": "-1",
+                            "value": "-1",
+                            "hidden": false,
+                            "advanced": false,
+                            "group": "",
+                            "enumValues": "-1:Library default|0:Oldest first|1:Newest first"
+                        }
+                    ]
+                },
+                "OnDeck": {
+                    "Metadata": {
+                        "ratingKey": "38972",
+                        "key": "/library/metadata/38972",
+                        "parentRatingKey": "38971",
+                        "grandparentRatingKey": "38970",
+                        "guid": "plex://episode/63757550e94bac336ff65b45",
+                        "parentGuid": "plex://season/63fdfddfa8e00803a3cad3de",
+                        "grandparentGuid": "plex://show/63757550e94bac336ff65b16",
+                        "type": "episode",
+                        "title": "Take Your Daughter To Work Day",
+                        "grandparentKey": "/library/metadata/38970",
+                        "parentKey": "/library/metadata/38971",
+                        "librarySectionTitle": "TV Shows",
+                        "librarySectionID": 2,
+                        "librarySectionKey": "/library/sections/2",
+                        "grandparentTitle": "FUBAR",
+                        "parentTitle": "Season 1",
+                        "contentRating": "TV-MA",
+                        "summary": "With his retirement from the CIA imminent, Luke prepares for his next adventure, but revelations at home and an urgent matter at work upend his plans.",
+                        "index": 1,
+                        "parentIndex": 1,
+                        "year": 2023,
+                        "thumb": "/library/metadata/38972/thumb/1685153015",
+                        "art": "/library/metadata/38970/art/1685153013",
+                        "parentThumb": "/library/metadata/38971/thumb/1685153014",
+                        "grandparentThumb": "/library/metadata/38970/thumb/1685153013",
+                        "grandparentArt": "/library/metadata/38970/art/1685153013",
+                        "duration": 3323904,
+                        "originallyAvailableAt": "2023-05-25",
+                        "addedAt": 1685153009,
+                        "updatedAt": 1685153015,
+                        "Media": [
+                            {
+                                "id": 75169,
+                                "duration": 3323904,
+                                "bitrate": 5545,
+                                "width": 1920,
+                                "height": 1080,
+                                "aspectRatio": 1.78,
+                                "audioChannels": 6,
+                                "audioCodec": "eac3",
+                                "videoCodec": "h264",
+                                "videoResolution": "1080",
+                                "container": "mkv",
+                                "videoFrameRate": "24p",
+                                "videoProfile": "main",
+                                "Part": [
+                                    {
+                                        "id": 97079,
+                                        "key": "/library/parts/97079/1685030530/file.mkv",
+                                        "duration": 3323904,
+                                        "file": "/Media/TV Shows/FUBAR/Season 01/FUBAR - S01E01 - Take Your Daughter to Work Day (2023-05-25) [WEBDL-1080p x264 EAC3 Atmos].mkv",
+                                        "size": 2304082248,
+                                        "container": "mkv",
+                                        "videoProfile": "main",
+                                        "Stream": [
+                                            {
+                                                "id": 282433,
+                                                "streamType": 1,
+                                                "default": true,
+                                                "codec": "h264",
+                                                "index": 0,
+                                                "bitrate": 5545,
+                                                "bitDepth": 8,
+                                                "chromaLocation": "left",
+                                                "chromaSubsampling": "4:2:0",
+                                                "codedHeight": 1088,
+                                                "codedWidth": 1920,
+                                                "frameRate": 23.976,
+                                                "hasScalingMatrix": false,
+                                                "height": 1080,
+                                                "level": 40,
+                                                "profile": "main",
+                                                "refFrames": 3,
+                                                "scanType": "progressive",
+                                                "width": 1920,
+                                                "displayTitle": "1080p (H.264)",
+                                                "extendedDisplayTitle": "1080p (H.264)"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "Guid": [
+                            {
+                                "id": "imdb://tt13130216"
+                            },
+                            {
+                                "id": "tmdb://4263108"
+                            },
+                            {
+                                "id": "tvdb://9457880"
+                            }
+                        ],
+                        "Director": [
+                            {
+                                "id": 34345,
+                                "filter": "director=34345",
+                                "tag": "Phil Abraham",
+                                "tagKey": "5d7770e46afb3d0020624551",
+                                "thumb": "https://metadata-static.plex.tv/7/people/78062dd3dee60d12b31a6e1ce6c66cc5.jpg"
+                            }
+                        ],
+                        "Writer": [
+                            {
+                                "id": 64383,
+                                "filter": "writer=64383",
+                                "tag": "Nick Santora",
+                                "tagKey": "5d77683b4de0ee001fccca01",
+                                "thumb": "https://metadata-static.plex.tv/people/5d77683b4de0ee001fccca01.jpg"
+                            }
+                        ],
+                        "Role": [
+                            {
+                                "id": 19365,
+                                "filter": "actor=19365",
+                                "tag": "Devon Bostick",
+                                "tagKey": "5d77683361141d001fb1525b",
+                                "role": "Oscar Brunner",
+                                "thumb": "https://metadata-static.plex.tv/a/people/aa1895caf4da78acda406cc51b848b6f.jpg"
+                            }
+                        ],
+                        "Extras": {
+                            "size": 0
+                        }
+                    }
+                },
+                "Extras": {
+                    "size": 2,
+                    "Metadata": [
+                        {
+                            "ratingKey": "38974",
+                            "key": "/library/metadata/38974",
+                            "guid": "iva://api.internetvideoarchive.com/2.0/DataService/VideoAssets(651242)",
+                            "type": "clip",
+                            "title": "Fubar",
+                            "summary": "",
+                            "index": 1,
+                            "thumb": "/library/metadata/38974/thumb/1685153010",
+                            "primaryGuid": "plex://show/63757550e94bac336ff65b16",
+                            "subtype": "trailer",
+                            "duration": 149000,
+                            "addedAt": 1685153010,
+                            "extraType": 1,
+                            "Media": [
+                                {
+                                    "id": 75171,
+                                    "duration": 149000,
+                                    "bitrate": 5000,
+                                    "width": 1920,
+                                    "height": 804,
+                                    "aspectRatio": 2.35,
+                                    "audioCodec": "aac",
+                                    "videoCodec": "h264",
+                                    "videoResolution": "1080",
+                                    "container": "mp4",
+                                    "optimizedForStreaming": 1,
+                                    "protocol": "mp4",
+                                    "premium": true,
+                                    "Part": [
+                                        {
+                                            "id": 97081,
+                                            "duration": 149000,
+                                            "container": "mp4",
+                                            "key": "/services/iva/assets/651242/video.mp4?fmt=4&bitrate=5000",
+                                            "Stream": [
+                                                {
+                                                    "id": 282514,
+                                                    "streamType": 2,
+                                                    "selected": true,
+                                                    "codec": "aac",
+                                                    "index": 1,
+                                                    "channels": 2,
+                                                    "language": "English",
+                                                    "languageTag": "en",
+                                                    "languageCode": "eng",
+                                                    "displayTitle": "English (AAC Stereo)",
+                                                    "extendedDisplayTitle": "English (AAC Stereo)"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
 */
