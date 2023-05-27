@@ -97,7 +97,7 @@ docker-compose up -d -f /path/to/docker-compose.yml
 -   Plex and Overseerr connection details are required, but Radarr, Sonarr, and Tautulli connection details are optional.
     -   If Radarr and/or Sonarr connection details are provided, then Tautulli connection details are required as well.
 -   If a user requests an item in Overseerr, tag the item in Plex with `requester:plex_username`.
--   Unless the environment variable `FEATURE_CREATE_COLLECTIONS` is set to `0`, also create smart collections in Plex for each requester that include the tagged media items, and tag the collection with `owner:plex_username`. These collections will have titles such as `Movies Requested by plex_username` or `TV Shows Requested by plex_username`, and the Sort Titles will have the prefix `zzz_` so the collections appear at the bottom of the list.
+-   Unless the environment variable `FEATURE_CREATE_COLLECTIONS` is set to `0`, also create smart collections in Plex for each requester that include the tagged media items, and tag the collection with `owner:plex_username`. These collections will have titles such as `Movies Requested by overseerr_displayName` or `TV Shows Requested by plex_username`, and the Sort Titles will have the prefix `zzz_` so the collections appear at the bottom of the list.
 -   If Tautulli and Radarr/Sonarr connection details are set in environment variables:
     -   If a user requests an item in Overseerr, tag the item in Radarr/Sonarr with `requester:plex_username`.
     -   If Tautulli shows that a user OTHER THAN the requester has watched the item in the last 3 months, tag the item in Radarr/Sonarr with `others_watching`.
@@ -105,7 +105,7 @@ docker-compose up -d -f /path/to/docker-compose.yml
     -   If Tautulli shows that the requester user has fully watched an item, tag the item in Radarr/Sonarr with `requester_watched`.
         -   If Tautulli later shows that the requester has no longer fully watched an item (e.g. they had finished a show but new episodes were added), remove the `requester_watched` tag from the item in Radarr/Sonarr.
     -   If Overseerr shows that a requested media item was downloaded over 6 months ago, and Tautulli shows that the requester user hasn't watched the item in over 3 months, AND no one else has watched it in 3 months, tag item in Radarr/Sonarr with `stale_request`.
-        -   If Tautulli later shows that the requester user has started watching the item, remove the `stale_request` tag from item in Radarr/Sonarr.
+        -   If Tautulli later shows that any user has started watching the item in the last 3 months, remove the `stale_request` tag from item in Radarr/Sonarr.
 -   The process will run once at start, then repeat every 24 hours, unless the environment variable `FEATURE_RUN_ONCE` is set to `1` in which case it will run through once then exit.
 -   Right now the system will only touch media items that exist both in Plex and as requests in Overseerr. If you add items to Plex directly, or bypass Overseerr and request in Radarr/Sonarr directly, those items won't be processed.
 

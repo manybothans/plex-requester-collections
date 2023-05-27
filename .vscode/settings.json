@@ -25,7 +25,7 @@
 		"editor.formatOnSave": false,
 		"editor.tabSize": 2
 	},
-	"[]": {
+	"[md]": {
 		"editor.formatOnSave": false,
 		"editor.tabSize": 2
 	},
@@ -41,6 +41,7 @@
 		"Akte",
 		"apikey",
 		"Bluray",
+		"buildx",
 		"Dadded",
 		"dmacpher",
 		"Dtitle",
@@ -53,9 +54,11 @@
 		"frontieres",
 		"Fsections",
 		"Ftype",
+		"homelab",
 		"imdb",
 		"Kopelson",
 		"Likvidátor",
+		"linebreak",
 		"manybothans",
 		"metacritic",
 		"OVERSEERR",
@@ -63,6 +66,7 @@
 		"preplay",
 		"RADARR",
 		"Scully",
+		"selfhost",
 		"SHORTBREHD",
 		"SONARR",
 		"TAUTULLI",

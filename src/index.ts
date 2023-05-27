@@ -103,7 +103,7 @@ const app = async function () {
 			// Feature flag to turn off the creation of smart collections.
 			if (process.env.FEATURE_CREATE_COLLECTIONS !== "0") {
 				// This is what the smart collection should be called.
-				let collectionTitle;
+				let collectionTitle: string;
 				if (displayName) {
 					collectionTitle =
 						sectionType == "movie"
