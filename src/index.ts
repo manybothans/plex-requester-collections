@@ -149,6 +149,31 @@ const app = async function () {
 			}
 			// We found a request
 			else {
+				// Remove not requested tag in case it was added before.
+				await PlexAPI.removeLabelFromItem(
+					sectionId,
+					sectionTypeCode,
+					mediaId,
+					TAG_NOT_REQUESTED
+				);
+
+				// Handle Radarr/Sonarr if applicable.
+				if (radarrSonarrItem && sectionType === "movie") {
+					// Remove not requested tag in case it was added before.
+					radarrSonarrItem = await RadarrAPI.removeTagFromMediaItem(
+						radarrSonarrItem.id,
+						TAG_NOT_REQUESTED,
+						<RadarrMediaDetails>radarrSonarrItem
+					);
+				} else if (radarrSonarrItem && sectionType === "show") {
+					// Remove not requested tag in case it was added before.
+					radarrSonarrItem = await SonarrAPI.removeTagFromMediaItem(
+						radarrSonarrItem.id,
+						TAG_NOT_REQUESTED,
+						<SonarrSeriesDetails>radarrSonarrItem
+					);
+				}
+
 				// Init some values we're going to need.
 				plexUsername = request?.requestedBy?.plexUsername;
 				const displayName = request?.requestedBy?.displayName;
@@ -172,14 +197,14 @@ const app = async function () {
 					// Tag the media item with requester username.
 					radarrSonarrItem = await RadarrAPI.addTagToMediaItem(
 						radarrSonarrItem.id,
-						TAG_NOT_REQUESTED,
+						requesterTagValue,
 						<RadarrMediaDetails>radarrSonarrItem
 					);
 				} else if (radarrSonarrItem && sectionType === "show") {
 					// Tag the media item with requester username.
 					radarrSonarrItem = await SonarrAPI.addTagToMediaItem(
 						radarrSonarrItem.id,
-						TAG_NOT_REQUESTED,
+						requesterTagValue,
 						<SonarrSeriesDetails>radarrSonarrItem
 					);
 				}
