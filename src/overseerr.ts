@@ -10,6 +10,7 @@
  */
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import https from "https";
 import _ from "lodash";
 import { error } from "console";
 
@@ -246,6 +247,16 @@ const OverseerrAPI = {
 				"X-Api-Key": process.env.OVERSEERR_API_KEY
 			};
 			requestObj.method = requestObj.method || "get";
+
+			// Ignore SSL verification errors, if set in .env (not recommended for production).
+			if (
+				process.env.IGNORE_SSL_ERRORS_OVERSEERR === "1" &&
+				_.startsWith(process.env.OVERSEERR_URL.toLowerCase(), "https")
+			) {
+				requestObj.httpsAgent = new https.Agent({
+					rejectUnauthorized: false
+				});
+			}
 
 			const start = Date.now();
 

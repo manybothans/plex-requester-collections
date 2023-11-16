@@ -134,17 +134,17 @@ const app = async function () {
 				if (radarrSonarrItem && sectionType === "movie") {
 					// Mark the item as not requested.
 					radarrSonarrItem = await RadarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_NOT_REQUESTED,
 						<RadarrMediaDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 				} else if (radarrSonarrItem && sectionType === "show") {
 					// Tag the item with the requester username.
 					radarrSonarrItem = await SonarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_NOT_REQUESTED,
 						<SonarrSeriesDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 				}
 			}
 			// We found a request
@@ -161,17 +161,17 @@ const app = async function () {
 				if (radarrSonarrItem && sectionType === "movie") {
 					// Remove not requested tag in case it was added before.
 					radarrSonarrItem = await RadarrAPI.removeTagFromMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_NOT_REQUESTED,
 						<RadarrMediaDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 				} else if (radarrSonarrItem && sectionType === "show") {
 					// Remove not requested tag in case it was added before.
 					radarrSonarrItem = await SonarrAPI.removeTagFromMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_NOT_REQUESTED,
 						<SonarrSeriesDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 				}
 
 				// Init some values we're going to need.
@@ -196,17 +196,17 @@ const app = async function () {
 				if (radarrSonarrItem && sectionType === "movie") {
 					// Tag the media item with requester username.
 					radarrSonarrItem = await RadarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						requesterTagValue,
 						<RadarrMediaDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 				} else if (radarrSonarrItem && sectionType === "show") {
 					// Tag the media item with requester username.
 					radarrSonarrItem = await SonarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						requesterTagValue,
 						<SonarrSeriesDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 				}
 
 				// Feature flag to turn off the creation of smart collections.
@@ -284,20 +284,20 @@ const app = async function () {
 			) {
 				// Remove tags from previous sessions in order to re-process.
 				radarrSonarrItem = await RadarrAPI.removeTagFromMediaItem(
-					radarrSonarrItem.id,
+					radarrSonarrItem?.id,
 					TAG_STALE_REQUEST,
 					<RadarrMediaDetails>radarrSonarrItem
-				);
+				) || radarrSonarrItem;
 				radarrSonarrItem = await RadarrAPI.removeTagFromMediaItem(
-					radarrSonarrItem.id,
+					radarrSonarrItem?.id,
 					TAG_OTHERS_WATCHING,
 					<RadarrMediaDetails>radarrSonarrItem
-				);
+				) || radarrSonarrItem;
 				radarrSonarrItem = await RadarrAPI.removeTagFromMediaItem(
-					radarrSonarrItem.id,
+					radarrSonarrItem?.id,
 					TAG_REQUESTER_WATCHED,
 					<RadarrMediaDetails>radarrSonarrItem
-				);
+				) || radarrSonarrItem;
 				await PlexAPI.removeLabelFromItem(
 					sectionId,
 					sectionTypeCode,
@@ -342,10 +342,10 @@ const app = async function () {
 					moment(lastWatchedDate_others) > STALE_VIEW_DATE_THRESHOLD
 				) {
 					radarrSonarrItem = await RadarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_OTHERS_WATCHING,
 						<RadarrMediaDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 					await PlexAPI.addLabelToItem(
 						sectionId,
 						sectionTypeCode,
@@ -374,10 +374,10 @@ const app = async function () {
 				if (watchedSession) {
 					// Add the tag to the media item in Radarr indicating that the requester has watched the item.
 					radarrSonarrItem = await RadarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_REQUESTER_WATCHED,
 						<RadarrMediaDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 					await PlexAPI.addLabelToItem(
 						sectionId,
 						sectionTypeCode,
@@ -405,10 +405,10 @@ const app = async function () {
 					moment(lastWatchedDate_others) < STALE_VIEW_DATE_THRESHOLD
 				) {
 					radarrSonarrItem = await RadarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_STALE_REQUEST,
 						<RadarrMediaDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 					await PlexAPI.addLabelToItem(
 						sectionId,
 						sectionTypeCode,
@@ -429,20 +429,20 @@ const app = async function () {
 			) {
 				// Remove tags from previous sessions in order to re-process.
 				radarrSonarrItem = await SonarrAPI.removeTagFromMediaItem(
-					radarrSonarrItem.id,
+					radarrSonarrItem?.id,
 					TAG_STALE_REQUEST,
 					<SonarrSeriesDetails>radarrSonarrItem
-				);
+				) || radarrSonarrItem;
 				radarrSonarrItem = await SonarrAPI.removeTagFromMediaItem(
-					radarrSonarrItem.id,
+					radarrSonarrItem?.id,
 					TAG_OTHERS_WATCHING,
 					<SonarrSeriesDetails>radarrSonarrItem
-				);
+				) || radarrSonarrItem;
 				radarrSonarrItem = await SonarrAPI.removeTagFromMediaItem(
-					radarrSonarrItem.id,
+					radarrSonarrItem?.id,
 					TAG_REQUESTER_WATCHED,
 					<SonarrSeriesDetails>radarrSonarrItem
-				);
+				) || radarrSonarrItem;
 				await PlexAPI.removeLabelFromItem(
 					sectionId,
 					sectionTypeCode,
@@ -487,10 +487,10 @@ const app = async function () {
 					moment(lastWatchedDate_others) > STALE_VIEW_DATE_THRESHOLD
 				) {
 					radarrSonarrItem = await SonarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_OTHERS_WATCHING,
 						<SonarrSeriesDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 					await PlexAPI.addLabelToItem(
 						sectionId,
 						sectionTypeCode,
@@ -523,15 +523,17 @@ const app = async function () {
 				// Has the user watched all the episodes, and have all the current episodes been downloaded?
 				if (
 					uniqueEpisodeHistories?.length ===
-						radarrSonarrItem?.statistics?.episodeCount &&
-					radarrSonarrItem?.statistics?.percentOfEpisodes === 100
+						(<SonarrSeriesDetails>radarrSonarrItem)?.statistics
+							?.episodeCount &&
+					(<SonarrSeriesDetails>radarrSonarrItem)?.statistics
+						?.percentOfEpisodes === 100
 				) {
 					// Tag the media item.
 					radarrSonarrItem = await SonarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_REQUESTER_WATCHED,
 						<SonarrSeriesDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 					await PlexAPI.addLabelToItem(
 						sectionId,
 						sectionTypeCode,
@@ -559,10 +561,10 @@ const app = async function () {
 					moment(lastWatchedDate_others) < STALE_VIEW_DATE_THRESHOLD
 				) {
 					radarrSonarrItem = await SonarrAPI.addTagToMediaItem(
-						radarrSonarrItem.id,
+						radarrSonarrItem?.id,
 						TAG_STALE_REQUEST,
 						<SonarrSeriesDetails>radarrSonarrItem
-					);
+					) || radarrSonarrItem;
 					await PlexAPI.addLabelToItem(
 						sectionId,
 						sectionTypeCode,

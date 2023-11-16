@@ -1,0 +1,20 @@
+{
+	"overrides": [
+		{
+			"files": ["*.yaml", "*.yml"],
+			"options": {
+				"singleQuote": true,
+				"tabWidth": 2,
+				"useTabs": false
+			}
+		},
+		{
+			"files": ["*.html", "*.js", "*.ts", "*.json"],
+			"options": {
+				"singleQuote": false,
+				"tabWidth": 4,
+				"useTabs": true
+			}
+		}
+	]
+}

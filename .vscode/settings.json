@@ -1,38 +1,8 @@
 {
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"yaml.format.enable": true,
-	"editor.indentSize": "tabSize",
 	"search.useIgnoreFiles": true,
 	"editor.formatOnSave": true,
 	"editor.formatOnPaste": true,
-	"editor.tabSize": 4,
-	"editor.insertSpaces": false,
-	"javascript.preferences.quoteStyle": "double",
-	"typescript.preferences.quoteStyle": "double",
-	"tsimporter.doubleQuotes": true,
-	"prettier.singleQuote": false,
-	"prettier.tabWidth": 4,
-	"prettier.useTabs": true,
-	"editor.wordWrapColumn": 120,
-	"yaml.schemas": {
-		"https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": "file:///Users/jlatimer/Code/plex-requester-collections/docker-compose-example.yml"
-	},
-	"[yaml]": {
-		"editor.formatOnSave": false,
-		"editor.tabSize": 2
-	},
-	"[markdown]": {
-		"editor.formatOnSave": false,
-		"editor.tabSize": 2
-	},
-	"[md]": {
-		"editor.formatOnSave": false,
-		"editor.tabSize": 2
-	},
-	"[dockercompose]": {
-		"editor.formatOnSave": false,
-		"editor.tabSize": 2
-	},
 	"search.exclude": {
 		"**/node_modules": true
 	},

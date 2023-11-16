@@ -11,6 +11,7 @@
  */
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import https from "https";
 import _ from "lodash";
 import { error } from "console";
 
@@ -632,6 +633,16 @@ const PlexAPI = {
 			requestObj.method = requestObj.method || "get";
 			requestObj.params = requestObj.params || {};
 			requestObj.params["X-Plex-Token"] = process.env.PLEX_TOKEN;
+
+			// Ignore SSL verification errors, if set in .env (not recommended for production).
+			if (
+				process.env.IGNORE_SSL_ERRORS_PLEX === "1" &&
+				_.startsWith(process.env.PLEX_URL.toLowerCase(), "https")
+			) {
+				requestObj.httpsAgent = new https.Agent({
+					rejectUnauthorized: false
+				});
+			}
 
 			const start = Date.now();
 

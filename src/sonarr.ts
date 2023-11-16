@@ -10,6 +10,7 @@
  */
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import https from "https";
 import { error } from "console";
 import _ from "lodash";
 
@@ -319,6 +320,16 @@ const SonarrAPI = {
 				"X-Api-Key": process.env.SONARR_API_KEY
 			};
 			requestObj.method = requestObj.method || "get";
+
+			// Ignore SSL verification errors, if set in .env (not recommended for production).
+			if (
+				process.env.IGNORE_SSL_ERRORS_SONARR === "1" &&
+				_.startsWith(process.env.SONARR_URL.toLowerCase(), "https")
+			) {
+				requestObj.httpsAgent = new https.Agent({
+					rejectUnauthorized: false
+				});
+			}
 
 			const start = Date.now();
 
